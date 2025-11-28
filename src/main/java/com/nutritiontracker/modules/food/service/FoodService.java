@@ -1,0 +1,137 @@
+package com.nutritiontracker.modules.food.service;
+
+import com.nutritiontracker.common.exception.ResourceNotFoundException;
+import com.nutritiontracker.common.exception.ValidationException;
+import com.nutritiontracker.modules.food.dto.FoodRequestDto;
+import com.nutritiontracker.modules.food.dto.FoodResponseDto;
+import com.nutritiontracker.modules.food.entity.Food;
+import com.nutritiontracker.modules.food.mapper.FoodMapper;
+import com.nutritiontracker.modules.food.repository.FoodRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@Transactional(readOnly = true)
+public class FoodService {
+
+    private final FoodRepository foodRepository;
+    private final FoodMapper foodMapper;
+
+    /**
+     * Create a new food
+     */
+    @Transactional
+    public FoodResponseDto createFood(FoodRequestDto requestDto) {
+        log.info("Creating new food: {}", requestDto.getName());
+
+        // Validate barcode uniqueness if provided
+        if (requestDto.getBarcode() != null && !requestDto.getBarcode().isBlank()) {
+            if (foodRepository.existsByBarcode(requestDto.getBarcode())) {
+                throw new ValidationException("Food with barcode '" + requestDto.getBarcode() + "' already exists");
+            }
+        }
+
+        Food food = foodMapper.toEntity(requestDto);
+        Food savedFood = foodRepository.save(food);
+        
+        log.info("Food created successfully with id: {}", savedFood.getId());
+        return foodMapper.toDto(savedFood);
+    }
+
+    /**
+     * Get food by ID
+     */
+    public FoodResponseDto getFoodById(Long id) {
+        log.debug("Fetching food with id: {}", id);
+        
+        Food food = foodRepository.findByIdWithNutritionalInfo(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Food", id));
+        
+        return foodMapper.toDto(food);
+    }
+
+    /**
+     * Get all foods with pagination
+     */
+    public Page<FoodResponseDto> getAllFoods(Pageable pageable) {
+        log.debug("Fetching all foods with pagination: {}", pageable);
+        
+        Page<Food> foods = foodRepository.findAll(pageable);
+        return foods.map(foodMapper::toDto);
+    }
+
+    /**
+     * Search foods by name or brand
+     */
+    public Page<FoodResponseDto> searchFoods(String query, Pageable pageable) {
+        log.debug("Searching foods with query: {}", query);
+        
+        if (query == null || query.isBlank()) {
+            return getAllFoods(pageable);
+        }
+        
+        Page<Food> foods = foodRepository.searchByNameOrBrand(query.trim(), pageable);
+        return foods.map(foodMapper::toDto);
+    }
+
+    /**
+     * Update existing food
+     */
+    @Transactional
+    public FoodResponseDto updateFood(Long id, FoodRequestDto requestDto) {
+        log.info("Updating food with id: {}", id);
+
+        Food existingFood = foodRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Food", id));
+
+        // Validate barcode uniqueness if changed
+        if (requestDto.getBarcode() != null && !requestDto.getBarcode().isBlank()) {
+            if (!requestDto.getBarcode().equals(existingFood.getBarcode())) {
+                if (foodRepository.existsByBarcode(requestDto.getBarcode())) {
+                    throw new ValidationException("Food with barcode '" + requestDto.getBarcode() + "' already exists");
+                }
+            }
+        }
+
+        foodMapper.updateEntityFromDto(requestDto, existingFood);
+        Food updatedFood = foodRepository.save(existingFood);
+        
+        log.info("Food updated successfully with id: {}", updatedFood.getId());
+        return foodMapper.toDto(updatedFood);
+    }
+
+    /**
+     * Delete food by ID
+     */
+    @Transactional
+    public void deleteFood(Long id) {
+        log.info("Deleting food with id: {}", id);
+
+        if (!foodRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Food", id);
+        }
+
+        foodRepository.deleteById(id);
+        log.info("Food deleted successfully with id: {}", id);
+    }
+
+    /**
+     * Check if food exists by ID
+     */
+    public boolean existsById(Long id) {
+        return foodRepository.existsById(id);
+    }
+
+    /**
+     * Get total count of foods
+     */
+    public long getTotalCount() {
+        return foodRepository.count();
+    }
+}

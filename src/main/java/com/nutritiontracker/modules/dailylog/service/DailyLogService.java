@@ -39,8 +39,20 @@ public class DailyLogService {
      */
     @Transactional
     public DailyLogResponseDto getOrCreateDailyLog(LocalDate date) {
-        DailyLog dailyLog = dailyLogRepository.findByDateWithEntries(date)
-                .orElseGet(() -> createEmptyLog(date));
+        List<DailyLog> logs = dailyLogRepository.findByDateWithEntries(date);
+        DailyLog dailyLog;
+
+        if (logs.isEmpty()) {
+            dailyLog = createEmptyLog(date);
+        } else {
+            dailyLog = logs.get(0);
+        }
+
+        // Explicitly initialize nutritionalInfo for all entries to avoid lazy loading
+        // issues
+        for (MealEntry entry : dailyLog.getMealEntries()) {
+            entry.getFood().getNutritionalInfo().getCalories(); // Force initialization
+        }
 
         return mapToDto(dailyLog);
     }
@@ -52,8 +64,14 @@ public class DailyLogService {
     public DailyLogResponseDto addEntry(MealEntryRequestDto request) {
         log.info("Adding meal entry for date: {}", request.getDate());
 
-        DailyLog dailyLog = dailyLogRepository.findByDate(request.getDate())
-                .orElseGet(() -> createEmptyLog(request.getDate()));
+        List<DailyLog> logs = dailyLogRepository.findByDateWithEntries(request.getDate());
+        DailyLog dailyLog;
+
+        if (logs.isEmpty()) {
+            dailyLog = createEmptyLog(request.getDate());
+        } else {
+            dailyLog = logs.get(0);
+        }
 
         Food food = foodRepository.findByIdWithNutritionalInfo(request.getFoodId())
                 .orElseThrow(() -> new ResourceNotFoundException("Food", request.getFoodId()));
@@ -74,7 +92,7 @@ public class DailyLogService {
     public DailyLogResponseDto updateEntry(Long entryId, MealEntryRequestDto request) {
         log.info("Updating meal entry id: {}", entryId);
 
-        MealEntry entry = mealEntryRepository.findById(entryId)
+        MealEntry entry = mealEntryRepository.findByIdWithRelations(entryId)
                 .orElseThrow(() -> new ResourceNotFoundException("MealEntry", entryId));
 
         // Update basic fields
@@ -100,7 +118,7 @@ public class DailyLogService {
     public DailyLogResponseDto deleteEntry(Long entryId) {
         log.info("Deleting meal entry id: {}", entryId);
 
-        MealEntry entry = mealEntryRepository.findById(entryId)
+        MealEntry entry = mealEntryRepository.findByIdWithRelations(entryId)
                 .orElseThrow(() -> new ResourceNotFoundException("MealEntry", entryId));
 
         DailyLog dailyLog = entry.getDailyLog();

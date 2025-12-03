@@ -27,6 +27,7 @@ public class MealEntry {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "daily_log_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private DailyLog dailyLog;
 
     @ManyToOne(fetch = FetchType.LAZY)

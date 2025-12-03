@@ -20,6 +20,7 @@ public class NutritionalInfo {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_id", nullable = false, unique = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Food food;
 
     // Macronutrients (per serving)

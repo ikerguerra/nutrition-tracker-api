@@ -1,6 +1,8 @@
 package com.nutritiontracker.modules.dailylog.service;
 
 import com.nutritiontracker.common.exception.ResourceNotFoundException;
+import com.nutritiontracker.modules.auth.entity.UserProfile;
+import com.nutritiontracker.modules.auth.repository.UserProfileRepository;
 import com.nutritiontracker.modules.dailylog.dto.DailyLogResponseDto;
 import com.nutritiontracker.modules.dailylog.dto.MealEntryRequestDto;
 import com.nutritiontracker.modules.dailylog.entity.DailyLog;
@@ -33,17 +35,18 @@ public class DailyLogService {
     private final DailyLogRepository dailyLogRepository;
     private final MealEntryRepository mealEntryRepository;
     private final FoodRepository foodRepository;
+    private final UserProfileRepository userProfileRepository;
 
     /**
      * Get daily log for a specific date. Creates one if it doesn't exist.
      */
     @Transactional
-    public DailyLogResponseDto getOrCreateDailyLog(LocalDate date) {
+    public DailyLogResponseDto getOrCreateDailyLog(LocalDate date, Long userId) {
         List<DailyLog> logs = dailyLogRepository.findByDateWithEntries(date);
         DailyLog dailyLog;
 
         if (logs.isEmpty()) {
-            dailyLog = createEmptyLog(date);
+            dailyLog = createEmptyLog(date, userId);
         } else {
             dailyLog = logs.get(0);
         }
@@ -54,21 +57,21 @@ public class DailyLogService {
             entry.getFood().getNutritionalInfo().getCalories(); // Force initialization
         }
 
-        return mapToDto(dailyLog);
+        return mapToDto(dailyLog, userId);
     }
 
     /**
      * Add a new meal entry to the daily log
      */
     @Transactional
-    public DailyLogResponseDto addEntry(MealEntryRequestDto request) {
+    public DailyLogResponseDto addEntry(MealEntryRequestDto request, Long userId) {
         log.info("Adding meal entry for date: {}", request.getDate());
 
         List<DailyLog> logs = dailyLogRepository.findByDateWithEntries(request.getDate());
         DailyLog dailyLog;
 
         if (logs.isEmpty()) {
-            dailyLog = createEmptyLog(request.getDate());
+            dailyLog = createEmptyLog(request.getDate(), userId);
         } else {
             dailyLog = logs.get(0);
         }
@@ -82,14 +85,14 @@ public class DailyLogService {
         recalculateTotals(dailyLog);
         DailyLog savedLog = dailyLogRepository.save(dailyLog);
 
-        return mapToDto(savedLog);
+        return mapToDto(savedLog, userId);
     }
 
     /**
      * Update an existing meal entry
      */
     @Transactional
-    public DailyLogResponseDto updateEntry(Long entryId, MealEntryRequestDto request) {
+    public DailyLogResponseDto updateEntry(Long entryId, MealEntryRequestDto request, Long userId) {
         log.info("Updating meal entry id: {}", entryId);
 
         MealEntry entry = mealEntryRepository.findByIdWithRelations(entryId)
@@ -108,14 +111,14 @@ public class DailyLogService {
         recalculateTotals(dailyLog);
         dailyLogRepository.save(dailyLog);
 
-        return mapToDto(dailyLog);
+        return mapToDto(dailyLog, userId);
     }
 
     /**
      * Delete a meal entry
      */
     @Transactional
-    public DailyLogResponseDto deleteEntry(Long entryId) {
+    public DailyLogResponseDto deleteEntry(Long entryId, Long userId) {
         log.info("Deleting meal entry id: {}", entryId);
 
         MealEntry entry = mealEntryRepository.findByIdWithRelations(entryId)
@@ -127,22 +130,23 @@ public class DailyLogService {
         recalculateTotals(dailyLog);
         dailyLogRepository.save(dailyLog);
 
-        return mapToDto(dailyLog);
+        return mapToDto(dailyLog, userId);
     }
 
     // --- Helper Methods ---
 
-    private DailyLog createEmptyLog(LocalDate date) {
-        log.info("Creating new daily log for date: {}", date);
-        DailyLog log = DailyLog.builder()
+    private DailyLog createEmptyLog(LocalDate date, Long userId) {
+        log.info("Creating new daily log for date: {} and userId: {}", date, userId);
+        DailyLog dailyLog = DailyLog.builder()
                 .date(date)
+                .userId(userId)
                 .totalCalories(BigDecimal.ZERO)
                 .totalProtein(BigDecimal.ZERO)
                 .totalCarbs(BigDecimal.ZERO)
                 .totalFats(BigDecimal.ZERO)
                 .mealEntries(new ArrayList<>())
                 .build();
-        return dailyLogRepository.save(log);
+        return dailyLogRepository.save(dailyLog);
     }
 
     private MealEntry createMealEntry(DailyLog dailyLog, Food food, MealEntryRequestDto request) {
@@ -191,6 +195,10 @@ public class DailyLogService {
     }
 
     private DailyLogResponseDto mapToDto(DailyLog log) {
+        return mapToDto(log, null);
+    }
+
+    private DailyLogResponseDto mapToDto(DailyLog log, Long userId) {
         Map<MealType, List<DailyLogResponseDto.MealEntryDto>> meals = new EnumMap<>(MealType.class);
 
         // Initialize lists for all meal types
@@ -203,6 +211,12 @@ public class DailyLogService {
             meals.get(entry.getMealType()).add(mapEntryToDto(entry));
         }
 
+        // Fetch user goals if userId is provided
+        DailyLogResponseDto.DailyGoalsDto goals = null;
+        if (userId != null) {
+            goals = getUserGoals(userId);
+        }
+
         return DailyLogResponseDto.builder()
                 .id(log.getId())
                 .date(log.getDate())
@@ -212,7 +226,28 @@ public class DailyLogService {
                         .carbs(log.getTotalCarbs())
                         .fats(log.getTotalFats())
                         .build())
+                .goals(goals)
                 .meals(meals)
+                .build();
+    }
+
+    private DailyLogResponseDto.DailyGoalsDto getUserGoals(Long userId) {
+        return userProfileRepository.findByUserId(userId)
+                .map(profile -> DailyLogResponseDto.DailyGoalsDto.builder()
+                        .calorieGoal(profile.getDailyCalorieGoal())
+                        .proteinGoal(profile.getDailyProteinGoal())
+                        .carbsGoal(profile.getDailyCarbsGoal())
+                        .fatsGoal(profile.getDailyFatsGoal())
+                        .build())
+                .orElse(getDefaultGoals());
+    }
+
+    private DailyLogResponseDto.DailyGoalsDto getDefaultGoals() {
+        return DailyLogResponseDto.DailyGoalsDto.builder()
+                .calorieGoal(new BigDecimal("2000"))
+                .proteinGoal(new BigDecimal("150"))
+                .carbsGoal(new BigDecimal("200"))
+                .fatsGoal(new BigDecimal("65"))
                 .build();
     }
 

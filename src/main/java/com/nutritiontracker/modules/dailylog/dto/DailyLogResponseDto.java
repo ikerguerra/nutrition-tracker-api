@@ -18,7 +18,20 @@ public class DailyLogResponseDto {
     private Long id;
     private LocalDate date;
     private DailyTotalsDto totals;
+    private DailyGoalsDto goals;
     private Map<MealType, List<MealEntryDto>> meals;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DailyGoalsDto {
+        private BigDecimal calorieGoal;
+        private BigDecimal proteinGoal;
+        private BigDecimal carbsGoal;
+        private BigDecimal fatsGoal;
+    }
 
     @Getter
     @Setter

@@ -37,6 +37,16 @@ public class Food {
     @Column(name = "serving_unit", length = 50)
     private String servingUnit;
 
+    @Column(length = 50)
+    @Builder.Default
+    private String source = "LOCAL"; // LOCAL, OPENFOODFACTS
+
+    @Column(name = "external_id")
+    private String externalId;
+
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
+
     @OneToOne(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private NutritionalInfo nutritionalInfo;
 

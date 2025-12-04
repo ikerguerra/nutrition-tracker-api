@@ -94,4 +94,44 @@ public class UserProfile {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Helper methods
+    public Integer getAge() {
+        if (dateOfBirth == null)
+            return null;
+        return java.time.Period.between(dateOfBirth, LocalDate.now()).getYears();
+    }
+
+    public Double getProteinPercentage() {
+        if (useCustomMacros && customProteinPercentage != null) {
+            return customProteinPercentage.doubleValue();
+        }
+        return getDefaultMacroPercentages()[0];
+    }
+
+    public Double getCarbsPercentage() {
+        if (useCustomMacros && customCarbsPercentage != null) {
+            return customCarbsPercentage.doubleValue();
+        }
+        return getDefaultMacroPercentages()[1];
+    }
+
+    public Double getFatPercentage() {
+        if (useCustomMacros && customFatsPercentage != null) {
+            return customFatsPercentage.doubleValue();
+        }
+        return getDefaultMacroPercentages()[2];
+    }
+
+    private double[] getDefaultMacroPercentages() {
+        if (dietType == null)
+            return new double[] { 20.0, 50.0, 30.0 };
+
+        return switch (dietType) {
+            case "KETOGENIC" -> new double[] { 25.0, 5.0, 70.0 };
+            case "HIGH_PROTEIN" -> new double[] { 40.0, 30.0, 30.0 };
+            case "LOW_CARB" -> new double[] { 30.0, 20.0, 50.0 };
+            default -> new double[] { 20.0, 50.0, 30.0 }; // STANDARD
+        };
+    }
 }

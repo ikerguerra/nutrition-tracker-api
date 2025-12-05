@@ -23,7 +23,8 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 8080
+  port: ${PORT:8080}
+  address: 0.0.0.0
   error:
     include-message: always
     include-binding-errors: always

@@ -20,11 +20,22 @@ public class OpenApiConfig {
         @Value("${server.port:8080}")
         private String serverPort;
 
+        @Value("${swagger.server.url:}")
+        private String productionServerUrl;
+
         @Bean
         public OpenAPI nutritionTrackerOpenAPI() {
                 Server localServer = new Server();
                 localServer.setUrl("http://localhost:" + serverPort);
                 localServer.setDescription("Local Development Server");
+
+                // Add production server if URL is provided
+                Server productionServer = null;
+                if (productionServerUrl != null && !productionServerUrl.isEmpty()) {
+                        productionServer = new Server();
+                        productionServer.setUrl(productionServerUrl);
+                        productionServer.setDescription("Production Server");
+                }
 
                 Contact contact = new Contact();
                 contact.setName("Nutrition Tracker Team");
@@ -56,7 +67,8 @@ public class OpenApiConfig {
 
                 return new OpenAPI()
                                 .info(info)
-                                .servers(List.of(localServer))
+                                .servers(productionServer != null ? List.of(productionServer, localServer)
+                                                : List.of(localServer))
                                 .addSecurityItem(securityRequirement)
                                 .components(components);
         }

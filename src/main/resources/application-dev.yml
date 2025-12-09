@@ -54,7 +54,7 @@ app:
 external:
   openfoodfacts:
     base-url: https://world.openfoodfacts.org
-    timeout: 5000
+    timeout: 15000
 
 # CORS Configuration
 cors:

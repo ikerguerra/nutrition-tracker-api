@@ -46,6 +46,10 @@ public class OpenFoodFactsClient {
                                 .retrieve()
                                 .bodyToMono(OpenFoodFactsSearchResponse.class)
                                 .timeout(timeout)
+                                .retry(3) // Retry up to 3 times on failure
+                                .doOnError(error -> log.warn("Error calling OpenFoodFacts API for query '{}': {}",
+                                                query, error.getMessage()))
+                                .onErrorReturn(new OpenFoodFactsSearchResponse()) // Return empty response on error
                                 .block(); // Blocking for now as our service layer is synchronous
         }
 
@@ -66,6 +70,10 @@ public class OpenFoodFactsClient {
                                 .bodyToMono(ProductResponseWrapper.class)
                                 .map(ProductResponseWrapper::getProduct)
                                 .timeout(timeout)
+                                .retry(3) // Retry up to 3 times on failure
+                                .doOnError(error -> log.warn("Error calling OpenFoodFacts API for barcode '{}': {}",
+                                                barcode, error.getMessage()))
+                                .onErrorReturn(null) // Return null on error
                                 .block();
         }
 

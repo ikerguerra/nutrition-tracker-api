@@ -58,7 +58,7 @@ app:
 # External API Configuration
 external:
   openfoodfacts:
-    base-url: https://world.openfoodfacts.org/api/v2
+    base-url: https://world.openfoodfacts.org
     timeout: 5000
 
 # CORS Configuration

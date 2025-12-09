@@ -36,6 +36,11 @@ public class OpenFoodFactsService {
                 return Collections.emptyList();
             }
 
+            // Handle null products list from error response
+            if (response.getProducts() == null) {
+                return Collections.emptyList();
+            }
+
             return response.getProducts().stream()
                     .filter(this::isValidProduct)
                     .map(this::mapToDTO)
@@ -70,13 +75,18 @@ public class OpenFoodFactsService {
             return existing.get();
         }
 
-        OpenFoodFactsProduct externalProduct = openFoodFactsClient.getProductByBarcode(barcode);
-        if (externalProduct == null || !isValidProduct(externalProduct)) {
-            throw new IllegalArgumentException("Product not found or invalid data in OpenFoodFacts");
-        }
+        try {
+            OpenFoodFactsProduct externalProduct = openFoodFactsClient.getProductByBarcode(barcode);
+            if (externalProduct == null || !isValidProduct(externalProduct)) {
+                throw new IllegalArgumentException("Product not found or invalid data in OpenFoodFacts");
+            }
 
-        Food food = transformToFood(externalProduct);
-        return foodRepository.save(food);
+            Food food = transformToFood(externalProduct);
+            return foodRepository.save(food);
+        } catch (Exception e) {
+            log.error("Error importing product from OpenFoodFacts: {}", barcode, e);
+            throw new IllegalArgumentException("Failed to import product from OpenFoodFacts: " + e.getMessage());
+        }
     }
 
     private boolean isValidProduct(OpenFoodFactsProduct product) {

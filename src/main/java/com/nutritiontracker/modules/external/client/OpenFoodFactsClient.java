@@ -32,25 +32,32 @@ public class OpenFoodFactsClient {
         public OpenFoodFactsSearchResponse searchProducts(String query, int page, int pageSize) {
                 log.debug("Searching OpenFoodFacts for: {}, page: {}, size: {}", query, page, pageSize);
 
-                return webClient.get()
-                                .uri(uriBuilder -> uriBuilder
-                                                .path("/cgi/search.pl")
-                                                .queryParam("search_terms", query)
-                                                .queryParam("search_simple", "1")
-                                                .queryParam("action", "process")
-                                                .queryParam("fields", "code,product_name,brands,image_url,nutriments")
-                                                .queryParam("json", "1")
-                                                .queryParam("page", page)
-                                                .queryParam("page_size", pageSize)
-                                                .build())
-                                .retrieve()
-                                .bodyToMono(OpenFoodFactsSearchResponse.class)
-                                .timeout(timeout)
-                                .retry(3) // Retry up to 3 times on failure
-                                .doOnError(error -> log.warn("Error calling OpenFoodFacts API for query '{}': {}",
-                                                query, error.getMessage()))
-                                .onErrorReturn(new OpenFoodFactsSearchResponse()) // Return empty response on error
-                                .block(); // Blocking for now as our service layer is synchronous
+                try {
+                        return webClient.get()
+                                        .uri(uriBuilder -> uriBuilder
+                                                        .path("/cgi/search.pl")
+                                                        .queryParam("search_terms", query)
+                                                        .queryParam("search_simple", "1")
+                                                        .queryParam("action", "process")
+                                                        .queryParam("fields",
+                                                                        "code,product_name,brands,image_url,nutriments")
+                                                        .queryParam("json", "1")
+                                                        .queryParam("page", page)
+                                                        .queryParam("page_size", pageSize)
+                                                        .build())
+                                        .retrieve()
+                                        .bodyToMono(OpenFoodFactsSearchResponse.class)
+                                        .timeout(timeout)
+                                        .doOnError(error -> log.warn(
+                                                        "Error calling OpenFoodFacts API for query '{}': {}",
+                                                        query, error.getMessage()))
+                                        .onErrorReturn(new OpenFoodFactsSearchResponse()) // Return empty response on
+                                                                                          // error
+                                        .block(); // Blocking for now as our service layer is synchronous
+                } catch (Exception e) {
+                        log.error("Failed to search OpenFoodFacts for query '{}': {}", query, e.getMessage());
+                        return new OpenFoodFactsSearchResponse();
+                }
         }
 
         public OpenFoodFactsProduct getProductByBarcode(String barcode) {
@@ -61,20 +68,27 @@ public class OpenFoodFactsClient {
                 // But we can map the response to a wrapper or just the product.
                 // Let's assume we get a wrapper and extract the product.
 
-                return webClient.get()
-                                .uri(uriBuilder -> uriBuilder
-                                                .path("/api/v0/product/{barcode}.json")
-                                                .queryParam("fields", "code,product_name,brands,image_url,nutriments")
-                                                .build(barcode))
-                                .retrieve()
-                                .bodyToMono(ProductResponseWrapper.class)
-                                .map(ProductResponseWrapper::getProduct)
-                                .timeout(timeout)
-                                .retry(3) // Retry up to 3 times on failure
-                                .doOnError(error -> log.warn("Error calling OpenFoodFacts API for barcode '{}': {}",
-                                                barcode, error.getMessage()))
-                                .onErrorReturn(null) // Return null on error
-                                .block();
+                try {
+                        return webClient.get()
+                                        .uri(uriBuilder -> uriBuilder
+                                                        .path("/api/v0/product/{barcode}.json")
+                                                        .queryParam("fields",
+                                                                        "code,product_name,brands,image_url,nutriments")
+                                                        .build(barcode))
+                                        .retrieve()
+                                        .bodyToMono(ProductResponseWrapper.class)
+                                        .map(ProductResponseWrapper::getProduct)
+                                        .timeout(timeout)
+                                        .doOnError(error -> log.warn(
+                                                        "Error calling OpenFoodFacts API for barcode '{}': {}",
+                                                        barcode, error.getMessage()))
+                                        .onErrorReturn(null) // Return null on error
+                                        .block();
+                } catch (Exception e) {
+                        log.error("Failed to fetch product from OpenFoodFacts for barcode '{}': {}", barcode,
+                                        e.getMessage());
+                        return null;
+                }
         }
 
         // Helper class to unwrap single product response

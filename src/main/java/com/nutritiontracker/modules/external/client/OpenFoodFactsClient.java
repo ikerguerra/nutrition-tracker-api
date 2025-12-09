@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
@@ -69,7 +68,7 @@ public class OpenFoodFactsClient {
                 // Let's assume we get a wrapper and extract the product.
 
                 try {
-                        return webClient.get()
+                        ProductResponseWrapper wrapper = webClient.get()
                                         .uri(uriBuilder -> uriBuilder
                                                         .path("/api/v0/product/{barcode}.json")
                                                         .queryParam("fields",
@@ -77,13 +76,14 @@ public class OpenFoodFactsClient {
                                                         .build(barcode))
                                         .retrieve()
                                         .bodyToMono(ProductResponseWrapper.class)
-                                        .map(ProductResponseWrapper::getProduct)
                                         .timeout(timeout)
                                         .doOnError(error -> log.warn(
                                                         "Error calling OpenFoodFacts API for barcode '{}': {}",
                                                         barcode, error.getMessage()))
-                                        .onErrorReturn(null) // Return null on error
                                         .block();
+
+                        // Extract product from wrapper, return null if wrapper is null
+                        return wrapper != null ? wrapper.getProduct() : null;
                 } catch (Exception e) {
                         log.error("Failed to fetch product from OpenFoodFacts for barcode '{}': {}", barcode,
                                         e.getMessage());

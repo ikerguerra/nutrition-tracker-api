@@ -3,9 +3,9 @@ CREATE TABLE macro_presets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    protein_percentage DECIMAL(5, 2) NOT NULL,  -- 0-100
-    carbs_percentage DECIMAL(5, 2) NOT NULL,    -- 0-100
-    fats_percentage DECIMAL(5, 2) NOT NULL,     -- 0-100
+    protein_percentage INT NOT NULL,  -- 0-100
+    carbs_percentage INT NOT NULL,    -- 0-100
+    fats_percentage INT NOT NULL,     -- 0-100
     is_default BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

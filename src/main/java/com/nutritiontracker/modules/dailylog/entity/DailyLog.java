@@ -51,6 +51,9 @@ public class DailyLog {
     @Builder.Default
     private BigDecimal totalFats = BigDecimal.ZERO;
 
+    @Column(name = "daily_weight", precision = 5, scale = 2)
+    private BigDecimal dailyWeight;
+
     @OneToMany(mappedBy = "dailyLog", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MealEntry> mealEntries = new ArrayList<>();

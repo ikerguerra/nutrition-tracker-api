@@ -17,6 +17,7 @@ public class DailyLogResponseDto {
 
     private Long id;
     private LocalDate date;
+    private BigDecimal dailyWeight;
     private DailyTotalsDto totals;
     private DailyGoalsDto goals;
     private Map<MealType, List<MealEntryDto>> meals;

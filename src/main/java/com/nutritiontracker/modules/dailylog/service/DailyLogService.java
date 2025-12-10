@@ -135,7 +135,27 @@ public class DailyLogService {
         return mapToDto(dailyLog, userId);
     }
 
+    /**
+     * Update daily weight
+     */
+    @Transactional
+    public DailyLogResponseDto updateDailyWeight(LocalDate date, BigDecimal weight, Long userId) {
+        log.info("Updating daily weight for date: {} and userId: {}", date, userId);
+        DailyLog dailyLog = getOrCreateDailyLogEntity(date, userId);
+        dailyLog.setDailyWeight(weight);
+        dailyLogRepository.save(dailyLog);
+        return mapToDto(dailyLog, userId);
+    }
+
     // --- Helper Methods ---
+
+    private DailyLog getOrCreateDailyLogEntity(LocalDate date, Long userId) {
+        List<DailyLog> logs = dailyLogRepository.findByUserIdAndDateWithEntries(userId, date);
+        if (logs.isEmpty()) {
+            return createEmptyLog(date, userId);
+        }
+        return logs.get(0);
+    }
 
     private DailyLog createEmptyLog(LocalDate date, Long userId) {
         log.info("Creating new daily log for date: {} and userId: {}", date, userId);
@@ -222,6 +242,7 @@ public class DailyLogService {
         return DailyLogResponseDto.builder()
                 .id(log.getId())
                 .date(log.getDate())
+                .dailyWeight(log.getDailyWeight())
                 .totals(DailyLogResponseDto.DailyTotalsDto.builder()
                         .calories(log.getTotalCalories())
                         .protein(log.getTotalProtein())

@@ -53,6 +53,19 @@ public class DailyLogController {
                 .body(ApiResponse.success("Entry added successfully", updatedLog));
     }
 
+    @PatchMapping("/{date}/weight")
+    @Operation(summary = "Update daily weight", description = "Updates the weight recording for a specific day")
+    public ResponseEntity<ApiResponse<DailyLogResponseDto>> updateWeight(
+            @AuthenticationPrincipal User user,
+            @Parameter(description = "Date (YYYY-MM-DD)") @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Valid @RequestBody com.nutritiontracker.modules.dailylog.dto.DailyLogWeightRequestDto request) {
+
+        log.info("REST request to update weight for date: {}", date);
+        DailyLogResponseDto updatedLog = dailyLogService.updateDailyWeight(date, request.getWeight(), user.getId());
+
+        return ResponseEntity.ok(ApiResponse.success("Weight updated successfully", updatedLog));
+    }
+
     @PutMapping("/entries/{id}")
     @Operation(summary = "Update meal entry", description = "Updates an existing meal entry")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> updateEntry(

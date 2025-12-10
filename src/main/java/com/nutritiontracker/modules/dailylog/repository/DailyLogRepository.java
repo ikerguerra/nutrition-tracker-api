@@ -16,21 +16,23 @@ import java.util.Optional;
 public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
 
     /**
-     * Find daily log by date (and user_id implicitly for now)
+     * Find daily log by user and date
      */
-    Optional<DailyLog> findByDate(LocalDate date);
+    Optional<DailyLog> findByUserIdAndDate(Long userId, LocalDate date);
 
     /**
-     * Find daily log with meal entries eagerly loaded
-     * Returns a List because JOIN FETCH with multiple bags can return multiple rows
-     * for the same entity.
-     * We will handle picking the unique result in the service.
+     * Find daily log with meal entries eagerly loaded for a specific user
      */
-    @Query("SELECT DISTINCT dl FROM DailyLog dl LEFT JOIN FETCH dl.mealEntries me LEFT JOIN FETCH me.food WHERE dl.date = :date")
-    List<DailyLog> findByDateWithEntries(@Param("date") LocalDate date);
+    @Query("SELECT DISTINCT dl FROM DailyLog dl LEFT JOIN FETCH dl.mealEntries me LEFT JOIN FETCH me.food WHERE dl.userId = :userId AND dl.date = :date")
+    List<DailyLog> findByUserIdAndDateWithEntries(@Param("userId") Long userId, @Param("date") LocalDate date);
 
     /**
-     * Check if log exists for date
+     * Find daily logs by user and date range (for calendar)
      */
-    boolean existsByDate(LocalDate date);
+    List<DailyLog> findByUserIdAndDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * Check if log exists for user and date
+     */
+    boolean existsByUserIdAndDate(Long userId, LocalDate date);
 }

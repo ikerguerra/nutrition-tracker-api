@@ -42,7 +42,7 @@ public class DailyLogService {
      */
     @Transactional
     public DailyLogResponseDto getOrCreateDailyLog(LocalDate date, Long userId) {
-        List<DailyLog> logs = dailyLogRepository.findByDateWithEntries(date);
+        List<DailyLog> logs = dailyLogRepository.findByUserIdAndDateWithEntries(userId, date);
         DailyLog dailyLog;
 
         if (logs.isEmpty()) {
@@ -67,7 +67,9 @@ public class DailyLogService {
     public DailyLogResponseDto addEntry(MealEntryRequestDto request, Long userId) {
         log.info("Adding meal entry for date: {}", request.getDate());
 
-        List<DailyLog> logs = dailyLogRepository.findByDateWithEntries(request.getDate());
+        log.info("Adding meal entry for date: {}", request.getDate());
+
+        List<DailyLog> logs = dailyLogRepository.findByUserIdAndDateWithEntries(userId, request.getDate());
         DailyLog dailyLog;
 
         if (logs.isEmpty()) {

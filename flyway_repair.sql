@@ -23,14 +23,14 @@ SELECT
 FROM flyway_schema_history 
 WHERE version = '5';
 
--- Expected output:
+-- Current state:
 -- version: 5
 -- checksum: -1719866606 (OLD - in database)
--- We need to update it to: 508745468 (NEW - in code)
+-- We need to update it to: -2019876065 (NEW - in current code)
 
 -- Step 3: Update the checksum to match the local file
 UPDATE flyway_schema_history 
-SET checksum = 508745468 
+SET checksum = -2019876065 
 WHERE version = '5';
 
 -- Step 4: Verify the fix
@@ -44,7 +44,7 @@ WHERE version = '5';
 
 -- Expected output after fix:
 -- version: 5
--- checksum: 508745468 (UPDATED)
+-- checksum: -2019876065 (UPDATED)
 -- success: 1
 
 -- Step 5: Check all migrations are in good state
@@ -58,3 +58,7 @@ ORDER BY installed_rank;
 
 -- After running this script, redeploy your application
 -- The Flyway validation should pass and the application should start successfully
+
+-- ALTERNATIVE: If you prefer to disable validation temporarily
+-- Add this environment variable in Railway:
+-- FLYWAY_VALIDATE_ON_MIGRATE=false

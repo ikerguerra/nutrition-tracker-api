@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.scheduling.annotation.Async;
+import java.util.Arrays;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -81,11 +84,76 @@ public class OpenFoodFactsService {
                 throw new IllegalArgumentException("Product not found or invalid data in OpenFoodFacts");
             }
 
-            Food food = transformToFood(externalProduct);
-            return foodRepository.save(food);
+            return saveExternalProduct(externalProduct);
         } catch (Exception e) {
             log.error("Error importing product from OpenFoodFacts: {}", barcode, e);
             throw new IllegalArgumentException("Failed to import product from OpenFoodFacts: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public Food saveExternalProduct(OpenFoodFactsProduct externalProduct) {
+        log.debug("Saving external product: {}", externalProduct.getCode());
+        Food food = transformToFood(externalProduct);
+        return foodRepository.save(food);
+    }
+
+    @Async
+    public void importBatch(String query, int maxPages) {
+        log.info("Starting batch import for query: {}, maxPages: {}", query, maxPages);
+        int totalImported = 0;
+
+        for (int page = 1; page <= maxPages; page++) {
+            log.info("Processing page {} for query: {}", page, query);
+            try {
+                OpenFoodFactsSearchResponse response = openFoodFactsClient.searchProducts(query, page, 20);
+                if (response == null || response.getProducts() == null || response.getProducts().isEmpty()) {
+                    log.info("No more products found for query: {} at page {}", query, page);
+                    break;
+                }
+
+                for (OpenFoodFactsProduct product : response.getProducts()) {
+                    if (isValidProduct(product) && !foodRepository.existsByBarcode(product.getCode())) {
+                        try {
+                            saveExternalProduct(product);
+                            totalImported++;
+                            log.debug("Successfully imported: {}", product.getProductName());
+
+                            // Rate limiting: sleep for 1.5 seconds between products
+                            Thread.sleep(1500);
+                        } catch (Exception e) {
+                            log.error("Failed to import individual product: {}", product.getCode(), e);
+                        }
+                    }
+                }
+
+                // Extra sleep between pages to be safe
+                Thread.sleep(2000);
+
+            } catch (Exception e) {
+                log.error("Error during batch import on page: {}", page, e);
+                break; // Stop if there's a serious error
+            }
+        }
+        log.info("Finished batch import for query: {}. Total imported: {}", query, totalImported);
+    }
+
+    @Async
+    public void importFeaturedCategories() {
+        List<String> categories = Arrays.asList("milk", "bread", "yogurt", "cheese", "snack", "drink", "meat",
+                "vegetable");
+        log.info("Starting featured categories import for: {}", categories);
+
+        for (String category : categories) {
+            importBatch(category, 2); // 2 pages per category is a good start
+            try {
+                // Sleep between categories
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Featured import interrupted", e);
+                break;
+            }
         }
     }
 

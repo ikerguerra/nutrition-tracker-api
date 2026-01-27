@@ -17,6 +17,10 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+
+  # Flyway Configuration
+  flyway:
+    clean-disabled: true
   
   # Security OAuth2 Configuration
   security:

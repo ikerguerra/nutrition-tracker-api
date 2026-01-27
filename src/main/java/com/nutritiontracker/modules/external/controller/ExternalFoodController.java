@@ -63,4 +63,24 @@ public class ExternalFoodController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
+
+    @PostMapping("/import-batch")
+    @Operation(summary = "Import in batch from OpenFoodFacts", description = "Import products from OpenFoodFacts in batch based on a search query")
+    public ResponseEntity<ApiResponse<String>> importBatch(
+            @Parameter(description = "Search query") @RequestParam String query,
+            @Parameter(description = "Max pages to process") @RequestParam(defaultValue = "1") int maxPages) {
+
+        log.info("REST request to import batch for query: {} (maxPages: {})", query, maxPages);
+        openFoodFactsService.importBatch(query, maxPages);
+        return ResponseEntity.ok(ApiResponse.success("Batch import started in background"));
+    }
+
+    @PostMapping("/import-featured")
+    @Operation(summary = "Import featured categories", description = "Import products for a predefined set of featured categories")
+    public ResponseEntity<ApiResponse<String>> importFeatured() {
+
+        log.info("REST request to import featured categories");
+        openFoodFactsService.importFeaturedCategories();
+        return ResponseEntity.ok(ApiResponse.success("Featured categories import started in background"));
+    }
 }

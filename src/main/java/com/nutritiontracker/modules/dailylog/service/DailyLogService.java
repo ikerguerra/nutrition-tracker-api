@@ -61,6 +61,35 @@ public class DailyLogService {
     }
 
     /**
+     * Get daily logs for a specific date range
+     */
+    @Transactional(readOnly = true)
+    public List<DailyLogResponseDto> getDailyLogsByDateRange(LocalDate startDate, LocalDate endDate, Long userId) {
+        log.info("Getting daily logs for date range: {} to {} and userId: {}", startDate, endDate, userId);
+        List<DailyLog> logs = dailyLogRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+
+        List<DailyLogResponseDto> response = new ArrayList<>();
+        for (DailyLog dailyLog : logs) {
+            // Force initialization similar to getOrCreateDailyLog if needed,
+            // but mapToDto access getters which might trigger lazy loading if session is
+            // open.
+            // Since we are in @Transactional, it should be fine.
+            // But safe to force init if mapToDto doesn't access deeply nested lazy props
+            // that aren't fetched.
+            // findByUserIdAndDateBetween does NOT fetch entries by default in the repo
+            // definition I saw?
+            // Wait, line 32 in Repo: List<DailyLog> findByUserIdAndDateBetween(...)
+            // It uses default JPA method which does NOT eagerly fetch.
+            // mapToDto iterates over mealEntries: available in line 240: for (MealEntry
+            // entry : log.getMealEntries())
+            // This will trigger lazy loading. Since we are in
+            // @Transactional(readOnly=true), it should work.
+            response.add(mapToDto(dailyLog, userId));
+        }
+        return response;
+    }
+
+    /**
      * Add a new meal entry to the daily log
      */
     @Transactional

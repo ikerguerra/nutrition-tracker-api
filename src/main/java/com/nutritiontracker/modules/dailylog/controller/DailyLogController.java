@@ -40,6 +40,24 @@ public class DailyLogController {
         return ResponseEntity.ok(ApiResponse.success(dailyLog));
     }
 
+    @GetMapping("/range")
+    @Operation(summary = "Get daily logs by date range", description = "Retrieves daily logs within a specified date range")
+    public ResponseEntity<ApiResponse<java.util.List<DailyLogResponseDto>>> getDailyLogsByRange(
+            @AuthenticationPrincipal User user,
+            @Parameter(description = "Start Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "End Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        log.info("REST request to get daily logs for range: {} to {}", startDate, endDate);
+
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date");
+        }
+
+        java.util.List<DailyLogResponseDto> logs = dailyLogService.getDailyLogsByDateRange(startDate, endDate,
+                user.getId());
+        return ResponseEntity.ok(ApiResponse.success(logs));
+    }
+
     @PostMapping("/entries")
     @Operation(summary = "Add meal entry", description = "Adds a food item to the daily log")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> addEntry(

@@ -12,7 +12,8 @@ import java.util.Optional;
 @Repository
 public interface MealTemplateRepository extends JpaRepository<MealTemplate, Long> {
 
-    List<MealTemplate> findByUserId(Long userId);
+    @Query("SELECT DISTINCT mt FROM MealTemplate mt LEFT JOIN FETCH mt.items i LEFT JOIN FETCH i.food f LEFT JOIN FETCH f.nutritionalInfo WHERE mt.userId = :userId")
+    List<MealTemplate> findByUserId(@Param("userId") Long userId);
 
     @Query("SELECT mt FROM MealTemplate mt LEFT JOIN FETCH mt.items i LEFT JOIN FETCH i.food f LEFT JOIN FETCH f.nutritionalInfo WHERE mt.id = :id")
     Optional<MealTemplate> findByIdWithItems(@Param("id") Long id);

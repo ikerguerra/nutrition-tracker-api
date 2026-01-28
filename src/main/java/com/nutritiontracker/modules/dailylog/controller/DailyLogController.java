@@ -58,6 +58,19 @@ public class DailyLogController {
         return ResponseEntity.ok(ApiResponse.success(logs));
     }
 
+    @GetMapping("/{date}/breakdown")
+    @Operation(summary = "Get nutrient breakdown", description = "Retrieves nutrient breakdown by meal type for a specific date")
+    public ResponseEntity<ApiResponse<java.util.List<com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto>>> getNutrientBreakdown(
+            @AuthenticationPrincipal User user,
+            @Parameter(description = "Date (YYYY-MM-DD)") @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        log.info("REST request to get nutrient breakdown for date: {}", date);
+        java.util.List<com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto> breakdown = dailyLogService
+                .getNutrientBreakdown(date, user.getId());
+
+        return ResponseEntity.ok(ApiResponse.success(breakdown));
+    }
+
     @PostMapping("/entries")
     @Operation(summary = "Add meal entry", description = "Adds a food item to the daily log")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> addEntry(

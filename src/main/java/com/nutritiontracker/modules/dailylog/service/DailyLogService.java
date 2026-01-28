@@ -90,6 +90,134 @@ public class DailyLogService {
     }
 
     /**
+     * Get nutrient breakdown by meal type
+     */
+    @Transactional(readOnly = true)
+    public List<com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto> getNutrientBreakdown(LocalDate date,
+            Long userId) {
+        log.info("Getting nutrient breakdown for date: {} and userId: {}", date, userId);
+
+        List<DailyLog> logs = dailyLogRepository.findByUserIdAndDateWithEntries(userId, date);
+        if (logs.isEmpty()) {
+            return new ArrayList<>();
+        }
+        DailyLog dailyLog = logs.get(0);
+
+        Map<MealType, com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto> aggregates = new EnumMap<>(
+                MealType.class);
+        for (MealType type : MealType.values()) {
+            aggregates.put(type, com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto.builder()
+                    .mealType(type)
+                    .calories(BigDecimal.ZERO)
+                    .protein(BigDecimal.ZERO)
+                    .carbs(BigDecimal.ZERO)
+                    .fats(BigDecimal.ZERO)
+                    .fiber(BigDecimal.ZERO)
+                    .sugars(BigDecimal.ZERO)
+                    .saturatedFats(BigDecimal.ZERO)
+                    .sodium(BigDecimal.ZERO)
+                    .calcium(BigDecimal.ZERO)
+                    .iron(BigDecimal.ZERO)
+                    .potassium(BigDecimal.ZERO)
+                    .vitaminA(BigDecimal.ZERO)
+                    .vitaminC(BigDecimal.ZERO)
+                    .vitaminD(BigDecimal.ZERO)
+                    .vitaminE(BigDecimal.ZERO)
+                    .vitaminB12(BigDecimal.ZERO)
+                    .build());
+        }
+
+        BigDecimal dayTotalCalories = BigDecimal.ZERO;
+        BigDecimal dayTotalProtein = BigDecimal.ZERO;
+        BigDecimal dayTotalCarbs = BigDecimal.ZERO;
+        BigDecimal dayTotalFats = BigDecimal.ZERO;
+
+        for (MealEntry entry : dailyLog.getMealEntries()) {
+            var dto = aggregates.get(entry.getMealType());
+
+            // Macros are already calculated in MealEntry
+            dto.setCalories(dto.getCalories().add(safe(entry.getCalories())));
+            dto.setProtein(dto.getProtein().add(safe(entry.getProtein())));
+            dto.setCarbs(dto.getCarbs().add(safe(entry.getCarbohydrates())));
+            dto.setFats(dto.getFats().add(safe(entry.getFats())));
+
+            dayTotalCalories = dayTotalCalories.add(safe(entry.getCalories()));
+            dayTotalProtein = dayTotalProtein.add(safe(entry.getProtein()));
+            dayTotalCarbs = dayTotalCarbs.add(safe(entry.getCarbohydrates()));
+            dayTotalFats = dayTotalFats.add(safe(entry.getFats()));
+
+            // Helper to calculate micronutrients from Food reference
+            Food food = entry.getFood();
+            if (food != null && food.getNutritionalInfo() != null) {
+                NutritionalInfo info = food.getNutritionalInfo();
+                BigDecimal servingSize = food.getServingSize() != null ? food.getServingSize()
+                        : BigDecimal.valueOf(100);
+                BigDecimal quantity = entry.getQuantity();
+
+                BigDecimal ratio = quantity.divide(servingSize, 4, RoundingMode.HALF_UP);
+
+                dto.setFiber(dto.getFiber().add(safe(info.getFiber()).multiply(ratio)));
+                dto.setSugars(dto.getSugars().add(safe(info.getSugars()).multiply(ratio)));
+                dto.setSaturatedFats(dto.getSaturatedFats().add(safe(info.getSaturatedFats()).multiply(ratio)));
+                dto.setSodium(dto.getSodium().add(safe(info.getSodium()).multiply(ratio)));
+                dto.setCalcium(dto.getCalcium().add(safe(info.getCalcium()).multiply(ratio)));
+                dto.setIron(dto.getIron().add(safe(info.getIron()).multiply(ratio)));
+                dto.setPotassium(dto.getPotassium().add(safe(info.getPotassium()).multiply(ratio)));
+                dto.setVitaminA(dto.getVitaminA().add(safe(info.getVitaminA()).multiply(ratio)));
+                dto.setVitaminC(dto.getVitaminC().add(safe(info.getVitaminC()).multiply(ratio)));
+                dto.setVitaminD(dto.getVitaminD().add(safe(info.getVitaminD()).multiply(ratio)));
+                dto.setVitaminE(dto.getVitaminE().add(safe(info.getVitaminE()).multiply(ratio)));
+                dto.setVitaminB12(dto.getVitaminB12().add(safe(info.getVitaminB12()).multiply(ratio)));
+            }
+        }
+
+        List<com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto> result = new ArrayList<>();
+
+        for (MealType type : MealType.values()) {
+            var dto = aggregates.get(type);
+
+            if (dayTotalCalories.compareTo(BigDecimal.ZERO) > 0) {
+                dto.setCaloriesPercentage(dto.getCalories().divide(dayTotalCalories, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100")).doubleValue());
+            }
+            if (dayTotalProtein.compareTo(BigDecimal.ZERO) > 0) {
+                dto.setProteinPercentage(dto.getProtein().divide(dayTotalProtein, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100")).doubleValue());
+            }
+            if (dayTotalCarbs.compareTo(BigDecimal.ZERO) > 0) {
+                dto.setCarbsPercentage(dto.getCarbs().divide(dayTotalCarbs, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100")).doubleValue());
+            }
+            if (dayTotalFats.compareTo(BigDecimal.ZERO) > 0) {
+                dto.setFatsPercentage(dto.getFats().divide(dayTotalFats, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100")).doubleValue());
+            }
+
+            // Round aggregated values for clean output
+            dto.setFiber(dto.getFiber().setScale(2, RoundingMode.HALF_UP));
+            dto.setSugars(dto.getSugars().setScale(2, RoundingMode.HALF_UP));
+            dto.setSaturatedFats(dto.getSaturatedFats().setScale(2, RoundingMode.HALF_UP));
+            dto.setSodium(dto.getSodium().setScale(2, RoundingMode.HALF_UP));
+            dto.setCalcium(dto.getCalcium().setScale(2, RoundingMode.HALF_UP));
+            dto.setIron(dto.getIron().setScale(2, RoundingMode.HALF_UP));
+            dto.setPotassium(dto.getPotassium().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminA(dto.getVitaminA().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminC(dto.getVitaminC().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminD(dto.getVitaminD().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminE(dto.getVitaminE().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminB12(dto.getVitaminB12().setScale(2, RoundingMode.HALF_UP));
+
+            result.add(dto);
+        }
+
+        return result;
+    }
+
+    private BigDecimal safe(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    /**
      * Add a new meal entry to the daily log
      */
     @Transactional

@@ -29,3 +29,7 @@ application-local.properties
 # Ignore test coverage reports
 *.exec
 *.ser
+
+# Agent
+.agent
+.agents

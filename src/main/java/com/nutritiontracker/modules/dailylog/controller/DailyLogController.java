@@ -4,6 +4,7 @@ import com.nutritiontracker.common.dto.ApiResponse;
 import com.nutritiontracker.modules.auth.entity.User;
 import com.nutritiontracker.modules.dailylog.dto.DailyLogResponseDto;
 import com.nutritiontracker.modules.dailylog.dto.MealEntryRequestDto;
+import com.nutritiontracker.modules.dailylog.enums.MealType;
 import com.nutritiontracker.modules.dailylog.service.DailyLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -120,5 +121,55 @@ public class DailyLogController {
         DailyLogResponseDto updatedLog = dailyLogService.deleteEntry(id, user.getId());
 
         return ResponseEntity.ok(ApiResponse.success("Entry deleted successfully", updatedLog));
+    }
+
+    @PostMapping("/{date}/copy")
+    @Operation(summary = "Copy daily log", description = "Copies meal entries from one date to another")
+    public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyDailyLog(
+            @AuthenticationPrincipal User user,
+            @Parameter(description = "Source Date (YYYY-MM-DD)") @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @Parameter(description = "Replace existing entries") @RequestParam(defaultValue = "false") boolean replace) {
+
+        log.info("REST request to copy daily log from {} to {}", date, targetDate);
+        DailyLogResponseDto copiedLog = dailyLogService.copyDailyLog(date, targetDate, replace, user.getId());
+
+        return ResponseEntity.ok(ApiResponse.success("Daily log copied successfully", copiedLog));
+    }
+
+    @PostMapping("/{date}/meals/{mealType}/copy")
+    @Operation(summary = "Copy meal section", description = "Copies all entries of a specific meal type to another date/meal type")
+    public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyMealSection(
+            @AuthenticationPrincipal User user,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @PathVariable String mealType,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @RequestParam String targetMealType,
+            @RequestParam(defaultValue = "false") boolean replace) {
+
+        log.info("REST request to copy meal section {} from {} to {}/{}", mealType, date, targetDate, targetMealType);
+        DailyLogResponseDto copiedLog = dailyLogService.copyMealSection(
+                date,
+                MealType.valueOf(mealType),
+                targetDate,
+                MealType.valueOf(targetMealType),
+                replace,
+                user.getId());
+
+        return ResponseEntity.ok(ApiResponse.success("Meal section copied successfully", copiedLog));
+    }
+
+    @PostMapping("/entries/{id}/copy")
+    @Operation(summary = "Copy meal entry", description = "Copies a single meal entry to another date/meal type")
+    public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyMealEntry(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id,
+            @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @Parameter(description = "Target Meal Type") @RequestParam(required = false) String targetMealType) {
+
+        log.info("REST request to copy meal entry {} to date {} and mealType {}", id, targetDate, targetMealType);
+        DailyLogResponseDto updatedLog = dailyLogService.copyMealEntry(id, targetDate, targetMealType, user.getId());
+
+        return ResponseEntity.ok(ApiResponse.success("Meal entry copied successfully", updatedLog));
     }
 }

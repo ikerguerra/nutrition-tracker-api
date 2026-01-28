@@ -462,4 +462,128 @@ public class DailyLogService {
                 .fats(entry.getFats())
                 .build();
     }
+
+    /**
+     * Copy daily log from one date to another
+     */
+    @Transactional
+    public DailyLogResponseDto copyDailyLog(LocalDate sourceDate, LocalDate targetDate, boolean replace, Long userId) {
+        log.info("Copying daily log from {} to {} for userId: {} (replace={})", sourceDate, targetDate, userId,
+                replace);
+
+        if (sourceDate.equals(targetDate)) {
+            throw new IllegalArgumentException("Source and target dates cannot be the same");
+        }
+
+        DailyLog sourceLog = dailyLogRepository.findByUserIdAndDateWithEntries(userId, sourceDate)
+                .stream().findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("DailyLog", "date", sourceDate));
+
+        DailyLog targetLog = getOrCreateDailyLogEntity(targetDate, userId);
+
+        if (replace) {
+            targetLog.getMealEntries().clear();
+        }
+
+        for (MealEntry sourceEntry : sourceLog.getMealEntries()) {
+            MealEntryRequestDto request = MealEntryRequestDto.builder()
+                    .date(targetDate)
+                    .mealType(sourceEntry.getMealType())
+                    .foodId(sourceEntry.getFood().getId())
+                    .quantity(sourceEntry.getQuantity())
+                    .unit(sourceEntry.getUnit())
+                    .build();
+
+            MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), request);
+            targetLog.addMealEntry(newEntry);
+        }
+
+        recalculateTotals(targetLog);
+        DailyLog savedLog = dailyLogRepository.save(targetLog);
+
+        return mapToDto(savedLog, userId);
+    }
+
+    /**
+     * Copy a single meal entry to another date/meal type
+     */
+    @Transactional
+    public DailyLogResponseDto copyMealEntry(Long entryId, LocalDate targetDate, String targetMealType, Long userId) {
+        MealEntry sourceEntry = mealEntryRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("MealEntry", entryId));
+
+        // Verify ownership (indirectly via DailyLog checks, or explicit check if
+        // needed)
+        // Here assuming entry ID is sufficient but robust app should check user
+        // ownership.
+        if (!sourceEntry.getDailyLog().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("Unauthorized access to this meal entry");
+        }
+
+        DailyLog targetLog = getOrCreateDailyLogEntity(targetDate, userId);
+
+        MealType newMealType = targetMealType != null ? MealType.valueOf(targetMealType) : sourceEntry.getMealType();
+
+        MealEntryRequestDto request = MealEntryRequestDto.builder()
+                .date(targetDate)
+                .mealType(newMealType)
+                .foodId(sourceEntry.getFood().getId())
+                .quantity(sourceEntry.getQuantity())
+                .unit(sourceEntry.getUnit())
+                .build();
+
+        MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), request);
+        targetLog.addMealEntry(newEntry);
+
+        recalculateTotals(targetLog);
+        dailyLogRepository.save(targetLog);
+
+        // Return the TARGET log so frontend can update if looking at target date,
+        // or just acknowledge success. Usually we return the updated resource.
+        return mapToDto(targetLog, userId);
+    }
+
+    /**
+     * Copy all entries of a specific meal type to another date/meal type
+     */
+    @Transactional
+    public DailyLogResponseDto copyMealSection(LocalDate sourceDate, MealType sourceMealType,
+            LocalDate targetDate, MealType targetMealType,
+            boolean replace, Long userId) {
+
+        DailyLog sourceLog = dailyLogRepository.findByUserIdAndDateWithEntries(userId, sourceDate)
+                .stream().findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("DailyLog", "date", sourceDate));
+
+        List<MealEntry> sourceEntries = sourceLog.getMealEntries().stream()
+                .filter(e -> e.getMealType() == sourceMealType)
+                .toList();
+
+        if (sourceEntries.isEmpty()) {
+            throw new ResourceNotFoundException("No entries found for meal type: " + sourceMealType);
+        }
+
+        DailyLog targetLog = getOrCreateDailyLogEntity(targetDate, userId);
+
+        if (replace) {
+            targetLog.getMealEntries().removeIf(e -> e.getMealType() == targetMealType);
+        }
+
+        for (MealEntry sourceEntry : sourceEntries) {
+            MealEntryRequestDto request = MealEntryRequestDto.builder()
+                    .date(targetDate)
+                    .mealType(targetMealType)
+                    .foodId(sourceEntry.getFood().getId())
+                    .quantity(sourceEntry.getQuantity())
+                    .unit(sourceEntry.getUnit())
+                    .build();
+
+            MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), request);
+            targetLog.addMealEntry(newEntry);
+        }
+
+        recalculateTotals(targetLog);
+        DailyLog savedLog = dailyLogRepository.save(targetLog);
+        return mapToDto(savedLog, userId);
+    }
 }

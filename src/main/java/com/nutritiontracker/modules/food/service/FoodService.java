@@ -39,7 +39,7 @@ public class FoodService {
 
         Food food = foodMapper.toEntity(requestDto);
         Food savedFood = foodRepository.save(food);
-        
+
         log.info("Food created successfully with id: {}", savedFood.getId());
         return foodMapper.toDto(savedFood);
     }
@@ -49,10 +49,10 @@ public class FoodService {
      */
     public FoodResponseDto getFoodById(Long id) {
         log.debug("Fetching food with id: {}", id);
-        
+
         Food food = foodRepository.findByIdWithNutritionalInfo(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Food", id));
-        
+
         return foodMapper.toDto(food);
     }
 
@@ -61,22 +61,34 @@ public class FoodService {
      */
     public Page<FoodResponseDto> getAllFoods(Pageable pageable) {
         log.debug("Fetching all foods with pagination: {}", pageable);
-        
+
         Page<Food> foods = foodRepository.findAll(pageable);
         return foods.map(foodMapper::toDto);
     }
 
     /**
-     * Search foods by name or brand
+     * Search foods by name, brand, and optionally filter by category
      */
-    public Page<FoodResponseDto> searchFoods(String query, Pageable pageable) {
-        log.debug("Searching foods with query: {}", query);
-        
-        if (query == null || query.isBlank()) {
+    public Page<FoodResponseDto> searchFoods(String query,
+            com.nutritiontracker.modules.food.enums.FoodCategory category, Pageable pageable) {
+        log.debug("Searching foods with query: {}, category: {}", query, category);
+
+        if ((query == null || query.isBlank()) && category == null) {
             return getAllFoods(pageable);
         }
-        
-        Page<Food> foods = foodRepository.searchByNameOrBrand(query.trim(), pageable);
+
+        Page<Food> foods;
+        if (category != null && (query == null || query.isBlank())) {
+            // Category only
+            foods = foodRepository.findByCategory(category, pageable);
+        } else if (category == null) {
+            // Query only
+            foods = foodRepository.searchByNameOrBrand(query.trim(), pageable);
+        } else {
+            // Both query and category
+            foods = foodRepository.searchByNameOrBrandAndCategory(query.trim(), category, pageable);
+        }
+
         return foods.map(foodMapper::toDto);
     }
 
@@ -101,7 +113,7 @@ public class FoodService {
 
         foodMapper.updateEntityFromDto(requestDto, existingFood);
         Food updatedFood = foodRepository.save(existingFood);
-        
+
         log.info("Food updated successfully with id: {}", updatedFood.getId());
         return foodMapper.toDto(updatedFood);
     }

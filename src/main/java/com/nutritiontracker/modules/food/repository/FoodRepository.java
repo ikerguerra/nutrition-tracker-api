@@ -39,7 +39,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
      * Search foods by name or brand
      */
     @Query("SELECT f FROM Food f WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
-           "OR LOWER(f.brand) LIKE LOWER(CONCAT('%', :query, '%'))")
+            "OR LOWER(f.brand) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Food> searchByNameOrBrand(@Param("query") String query, Pageable pageable);
 
     /**
@@ -53,4 +53,20 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
      */
     @Query("SELECT f FROM Food f LEFT JOIN FETCH f.nutritionalInfo WHERE f.barcode = :barcode")
     Optional<Food> findByBarcodeWithNutritionalInfo(@Param("barcode") String barcode);
+
+    /**
+     * Find foods by category
+     */
+    Page<Food> findByCategory(com.nutritiontracker.modules.food.enums.FoodCategory category, Pageable pageable);
+
+    /**
+     * Search foods by name or brand and filter by category
+     */
+    @Query("SELECT f FROM Food f WHERE " +
+            "(LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(f.brand) LIKE LOWER(CONCAT('%', :query, '%'))) "
+            +
+            "AND f.category = :category")
+    Page<Food> searchByNameOrBrandAndCategory(@Param("query") String query,
+            @Param("category") com.nutritiontracker.modules.food.enums.FoodCategory category,
+            Pageable pageable);
 }

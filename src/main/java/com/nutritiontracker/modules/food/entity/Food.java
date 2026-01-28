@@ -47,6 +47,10 @@ public class Food {
     @Column(name = "last_synced_at")
     private LocalDateTime lastSyncedAt;
 
+    @Column(name = "category", length = 50)
+    @Enumerated(EnumType.STRING)
+    private com.nutritiontracker.modules.food.enums.FoodCategory category;
+
     @OneToOne(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private NutritionalInfo nutritionalInfo;
 

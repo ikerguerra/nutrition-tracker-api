@@ -18,6 +18,7 @@ public class FoodResponseDto {
     private String barcode;
     private BigDecimal servingSize;
     private String servingUnit;
+    private com.nutritiontracker.modules.food.enums.FoodCategory category;
     private NutritionalInfoDto nutritionalInfo;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -29,7 +30,7 @@ public class FoodResponseDto {
     @Builder
     public static class NutritionalInfoDto {
         private Long id;
-        
+
         // Macronutrients
         private BigDecimal calories;
         private BigDecimal protein;

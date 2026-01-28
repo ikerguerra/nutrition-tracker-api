@@ -1,0 +1,14 @@
+-- Add category column to foods table
+ALTER TABLE foods ADD COLUMN category VARCHAR(50);
+
+-- Create index for category filtering
+CREATE INDEX idx_foods_category ON foods(category);
+
+-- Create indexes for nutritional filtering (for future use)
+CREATE INDEX idx_nutritional_info_protein ON nutritional_info(protein);
+CREATE INDEX idx_nutritional_info_carbs ON nutritional_info(carbs);
+CREATE INDEX idx_nutritional_info_fats ON nutritional_info(fats);
+CREATE INDEX idx_nutritional_info_calories ON nutritional_info(calories);
+
+-- Optional: Set default category for existing foods
+UPDATE foods SET category = 'OTHER' WHERE category IS NULL;

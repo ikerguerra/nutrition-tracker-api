@@ -29,6 +29,8 @@ public class FoodRequestDto {
     @Size(max = 50, message = "Serving unit must not exceed 50 characters")
     private String servingUnit;
 
+    private com.nutritiontracker.modules.food.enums.FoodCategory category;
+
     @Valid
     @NotNull(message = "Nutritional information is required")
     private NutritionalInfoDto nutritionalInfo;

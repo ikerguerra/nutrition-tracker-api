@@ -146,19 +146,20 @@ public class FoodController {
         }
 
         @GetMapping("/search")
-        @Operation(summary = "Search foods", description = "Search foods by name or brand")
+        @Operation(summary = "Search foods", description = "Search foods by name, brand, and optionally filter by category")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search completed successfully")
         })
         public ResponseEntity<ApiResponse<Page<FoodResponseDto>>> searchFoods(
-                        @Parameter(description = "Search query") @RequestParam String query,
+                        @Parameter(description = "Search query") @RequestParam(required = false) String query,
+                        @Parameter(description = "Filter by category") @RequestParam(required = false) com.nutritiontracker.modules.food.enums.FoodCategory category,
                         @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
 
-                log.info("REST request to search foods with query: {}", query);
+                log.info("REST request to search foods with query: {}, category: {}", query, category);
 
                 Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
-                Page<FoodResponseDto> foods = foodService.searchFoods(query, pageable);
+                Page<FoodResponseDto> foods = foodService.searchFoods(query, category, pageable);
 
                 return ResponseEntity.ok(ApiResponse.success(foods));
         }

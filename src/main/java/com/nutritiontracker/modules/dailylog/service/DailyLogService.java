@@ -159,6 +159,10 @@ public class DailyLogService {
 
     private DailyLog createEmptyLog(LocalDate date, Long userId) {
         log.info("Creating new daily log for date: {} and userId: {}", date, userId);
+
+        // Fetch current goals for snapshot
+        var goals = getUserGoals(userId);
+
         DailyLog dailyLog = DailyLog.builder()
                 .date(date)
                 .userId(userId)
@@ -166,6 +170,10 @@ public class DailyLogService {
                 .totalProtein(BigDecimal.ZERO)
                 .totalCarbs(BigDecimal.ZERO)
                 .totalFats(BigDecimal.ZERO)
+                .calorieGoal(goals.getCalorieGoal())
+                .proteinGoal(goals.getProteinGoal())
+                .carbsGoal(goals.getCarbsGoal())
+                .fatsGoal(goals.getFatsGoal())
                 .mealEntries(new ArrayList<>())
                 .build();
         return dailyLogRepository.save(dailyLog);
@@ -233,10 +241,19 @@ public class DailyLogService {
             meals.get(entry.getMealType()).add(mapEntryToDto(entry));
         }
 
-        // Fetch user goals if userId is provided
-        DailyLogResponseDto.DailyGoalsDto goals = null;
-        if (userId != null) {
-            goals = getUserGoals(userId);
+        // Fetch goals: Prioritize log snapshot, fallback to current user goals
+        DailyLogResponseDto.DailyGoalsDto goalsDto;
+        if (log.getCalorieGoal() != null) {
+            goalsDto = DailyLogResponseDto.DailyGoalsDto.builder()
+                    .calorieGoal(log.getCalorieGoal())
+                    .proteinGoal(log.getProteinGoal())
+                    .carbsGoal(log.getCarbsGoal())
+                    .fatsGoal(log.getFatsGoal())
+                    .build();
+        } else if (userId != null) {
+            goalsDto = getUserGoals(userId);
+        } else {
+            goalsDto = getDefaultGoals();
         }
 
         return DailyLogResponseDto.builder()
@@ -249,7 +266,7 @@ public class DailyLogService {
                         .carbs(log.getTotalCarbs())
                         .fats(log.getTotalFats())
                         .build())
-                .goals(goals)
+                .goals(goalsDto)
                 .meals(meals)
                 .build();
     }

@@ -54,6 +54,19 @@ public class DailyLog {
     @Column(name = "daily_weight", precision = 5, scale = 2)
     private BigDecimal dailyWeight;
 
+    // Goal snapshots
+    @Column(name = "calorie_goal", precision = 10, scale = 2)
+    private BigDecimal calorieGoal;
+
+    @Column(name = "protein_goal", precision = 10, scale = 2)
+    private BigDecimal proteinGoal;
+
+    @Column(name = "carbs_goal", precision = 10, scale = 2)
+    private BigDecimal carbsGoal;
+
+    @Column(name = "fats_goal", precision = 10, scale = 2)
+    private BigDecimal fatsGoal;
+
     @OneToMany(mappedBy = "dailyLog", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MealEntry> mealEntries = new ArrayList<>();

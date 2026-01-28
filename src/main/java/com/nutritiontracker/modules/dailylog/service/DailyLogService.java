@@ -351,15 +351,19 @@ public class DailyLogService {
 
     private void calculateAndSetMacros(MealEntry entry, Food food, BigDecimal quantity) {
         NutritionalInfo info = food.getNutritionalInfo();
-        BigDecimal servingSize = food.getServingSize();
+        BigDecimal servingSize = food.getServingSize() != null ? food.getServingSize() : BigDecimal.valueOf(100);
 
         // Ratio = quantity / servingSize
+        // Handle divide by zero
+        if (servingSize.compareTo(BigDecimal.ZERO) == 0) {
+            servingSize = BigDecimal.valueOf(100);
+        }
         BigDecimal ratio = quantity.divide(servingSize, 4, RoundingMode.HALF_UP);
 
-        entry.setCalories(info.getCalories().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
-        entry.setProtein(info.getProtein().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
-        entry.setCarbohydrates(info.getCarbohydrates().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
-        entry.setFats(info.getFats().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+        entry.setCalories(safe(info.getCalories()).multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+        entry.setProtein(safe(info.getProtein()).multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+        entry.setCarbohydrates(safe(info.getCarbohydrates()).multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+        entry.setFats(safe(info.getFats()).multiply(ratio).setScale(2, RoundingMode.HALF_UP));
     }
 
     private void recalculateTotals(DailyLog log) {
@@ -369,10 +373,10 @@ public class DailyLogService {
         BigDecimal totalFats = BigDecimal.ZERO;
 
         for (MealEntry entry : log.getMealEntries()) {
-            totalCals = totalCals.add(entry.getCalories());
-            totalProt = totalProt.add(entry.getProtein());
-            totalCarbs = totalCarbs.add(entry.getCarbohydrates());
-            totalFats = totalFats.add(entry.getFats());
+            totalCals = totalCals.add(safe(entry.getCalories()));
+            totalProt = totalProt.add(safe(entry.getProtein()));
+            totalCarbs = totalCarbs.add(safe(entry.getCarbohydrates()));
+            totalFats = totalFats.add(safe(entry.getFats()));
         }
 
         log.setTotalCalories(totalCals);

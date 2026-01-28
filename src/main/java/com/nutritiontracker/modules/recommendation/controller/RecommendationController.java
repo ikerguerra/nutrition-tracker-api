@@ -48,4 +48,14 @@ public class RecommendationController {
         dietGenerationService.acceptPlan(planId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{planId}/accept-meal")
+    public ResponseEntity<Void> acceptMeal(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long planId,
+            @RequestParam com.nutritiontracker.modules.dailylog.enums.MealType mealType) {
+
+        dietGenerationService.acceptMeal(planId, mealType);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -42,15 +42,19 @@ public class FoodRequestDto {
     @Builder
     public static class NutritionalInfoDto {
 
+        @NotNull(message = "Calories are required")
         @DecimalMin(value = "0.0", message = "Calories must be non-negative")
         private BigDecimal calories;
 
+        @NotNull(message = "Protein is required")
         @DecimalMin(value = "0.0", message = "Protein must be non-negative")
         private BigDecimal protein;
 
+        @NotNull(message = "Carbohydrates are required")
         @DecimalMin(value = "0.0", message = "Carbohydrates must be non-negative")
         private BigDecimal carbohydrates;
 
+        @NotNull(message = "Fats are required")
         @DecimalMin(value = "0.0", message = "Fats must be non-negative")
         private BigDecimal fats;
 

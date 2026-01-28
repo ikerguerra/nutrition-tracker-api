@@ -96,6 +96,7 @@ public class FoodController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Food created successfully"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input data")
         })
+        @PostMapping
         public ResponseEntity<ApiResponse<FoodResponseDto>> createFood(
                         @Valid @RequestBody FoodRequestDto requestDto) {
 

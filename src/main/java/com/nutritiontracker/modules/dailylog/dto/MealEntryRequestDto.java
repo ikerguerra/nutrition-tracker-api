@@ -3,7 +3,6 @@ package com.nutritiontracker.modules.dailylog.dto;
 import com.nutritiontracker.modules.dailylog.enums.MealType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -17,7 +16,6 @@ import java.time.LocalDate;
 public class MealEntryRequestDto {
 
     @NotNull(message = "Date is required")
-    @PastOrPresent(message = "Date cannot be in the future")
     private LocalDate date;
 
     @NotNull(message = "Meal type is required")

@@ -98,6 +98,8 @@ public class DietGenerationService {
 
         Map<MealType, List<Food>> frequentFoodsMap = dietAnalysisService.analyzeFrequentFoods(plan.getUserId(),
                 DAYS_TO_ANALYZE_PATTERNS, FREQUENT_FOODS_LIMIT);
+        log.info("Generando recomendaciones. Frequent foods found: {}", frequentFoodsMap.size());
+        frequentFoodsMap.forEach((k, v) -> log.info("MealType {}: {} foods", k, v.size()));
 
         Set<Long> usedFoodIds = new HashSet<>();
         RecommendationAlgorithmService.MacroTotals accumulatedDaily = new RecommendationAlgorithmService.MacroTotals();
@@ -119,6 +121,7 @@ public class DietGenerationService {
 
             List<DietRecommendation> recs = recommendationAlgorithmService.buildBalancedMeal(plan, mealType,
                     mealTarget, candidates, usedFoodIds, accumulatedDaily);
+            log.info("MealType {}: Generated {} recommendations", mealType, recs.size());
             recs.forEach(rec -> {
                 plan.addRecommendation(rec);
                 usedFoodIds.add(rec.getFoodId());
@@ -159,7 +162,28 @@ public class DietGenerationService {
         dietPlanRepository.save(plan);
     }
 
+    @Transactional
+    public void acceptMeal(Long planId, MealType mealType) {
+        DietPlan plan = dietPlanRepository.findById(planId)
+                .orElseThrow(() -> new RuntimeException("Plan not found"));
+
+        plan.getRecommendations().stream()
+                .filter(rec -> rec.getMealType() == mealType)
+                .forEach(this::acceptRecommendation);
+
+        // Check if all items are accepted to update plan status
+        if (plan.getRecommendations().stream()
+                .allMatch(rec -> rec.getStatus() == DietRecommendation.RecommendationStatus.ACCEPTED)) {
+            plan.setStatus(DietPlan.DietPlanStatus.ACCEPTED);
+            dietPlanRepository.save(plan);
+        }
+    }
+
     private void acceptRecommendation(DietRecommendation recommendation) {
+        if (recommendation.getStatus() == DietRecommendation.RecommendationStatus.ACCEPTED) {
+            return;
+        }
+
         com.nutritiontracker.modules.dailylog.dto.MealEntryRequestDto request = new com.nutritiontracker.modules.dailylog.dto.MealEntryRequestDto();
         request.setDate(recommendation.getDate());
         request.setMealType(recommendation.getMealType());
@@ -191,12 +215,12 @@ public class DietGenerationService {
                 if (f != null) {
                     // Safety: find the matching recommendation entity for this DTO item
                     plan.getRecommendations().stream()
-                            .filter(r -> r.getId() != null && r.getId().equals(item.getRecommendationId()))
+                            .filter(r -> r.getId() != null && r.getId().equals(item.getId()))
                             .findFirst()
                             .ifPresent(recEntity -> {
                                 RecommendationItemDto enriched = recommendationMapper.toItemDto(recEntity, f);
                                 item.setFoodName(enriched.getFoodName());
-                                item.setNutritionPerServing(enriched.getNutritionPerServing());
+                                item.setNutritionalInfo(enriched.getNutritionalInfo());
                                 item.setUnit(enriched.getUnit());
                             });
                 }
@@ -214,11 +238,11 @@ public class DietGenerationService {
     private NutritionalTotalsDto calculateTotals(List<RecommendationItemDto> items) {
         BigDecimal c = BigDecimal.ZERO, p = BigDecimal.ZERO, ch = BigDecimal.ZERO, f = BigDecimal.ZERO;
         for (RecommendationItemDto i : items) {
-            if (i.getNutritionPerServing() != null) {
-                c = c.add(safe(i.getNutritionPerServing().getCalories()));
-                p = p.add(safe(i.getNutritionPerServing().getProtein()));
-                ch = ch.add(safe(i.getNutritionPerServing().getCarbs()));
-                f = f.add(safe(i.getNutritionPerServing().getFats()));
+            if (i.getNutritionalInfo() != null) {
+                c = c.add(safe(i.getNutritionalInfo().getCalories()));
+                p = p.add(safe(i.getNutritionalInfo().getProtein()));
+                ch = ch.add(safe(i.getNutritionalInfo().getCarbs()));
+                f = f.add(safe(i.getNutritionalInfo().getFats()));
             }
         }
         return new NutritionalTotalsDto(c, p, ch, f);

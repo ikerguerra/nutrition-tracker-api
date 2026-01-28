@@ -12,11 +12,12 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecommendationItemDto {
-    private Long recommendationId;
+    private Long id;
     private Long foodId;
     private String foodName;
-    private BigDecimal quantity;
+    private BigDecimal suggestedQuantity;
     private String unit;
     private String reason;
-    private NutritionalTotalsDto nutritionPerServing; // per quantity suggested
+    private String status;
+    private NutritionalTotalsDto nutritionalInfo; // per quantity suggested
 }

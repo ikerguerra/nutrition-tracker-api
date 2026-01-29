@@ -72,4 +72,28 @@ public class NutritionalInfo {
 
     @Column(name = "vitamin_b12", precision = 10, scale = 2)
     private BigDecimal vitaminB12;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal magnesium;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal zinc;
+
+    @Column(name = "vitamin_k", precision = 10, scale = 2)
+    private BigDecimal vitaminK;
+
+    @Column(name = "vitamin_b1", precision = 10, scale = 2)
+    private BigDecimal vitaminB1; // Thiamine
+
+    @Column(name = "vitamin_b2", precision = 10, scale = 2)
+    private BigDecimal vitaminB2; // Riboflavin
+
+    @Column(name = "vitamin_b3", precision = 10, scale = 2)
+    private BigDecimal vitaminB3; // Niacin
+
+    @Column(name = "vitamin_b6", precision = 10, scale = 2)
+    private BigDecimal vitaminB6;
+
+    @Column(name = "vitamin_b9", precision = 10, scale = 2)
+    private BigDecimal vitaminB9; // Folate
 }

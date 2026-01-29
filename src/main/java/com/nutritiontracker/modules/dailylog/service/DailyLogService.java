@@ -124,6 +124,14 @@ public class DailyLogService {
                     .vitaminD(BigDecimal.ZERO)
                     .vitaminE(BigDecimal.ZERO)
                     .vitaminB12(BigDecimal.ZERO)
+                    .magnesium(BigDecimal.ZERO)
+                    .zinc(BigDecimal.ZERO)
+                    .vitaminK(BigDecimal.ZERO)
+                    .vitaminB1(BigDecimal.ZERO)
+                    .vitaminB2(BigDecimal.ZERO)
+                    .vitaminB3(BigDecimal.ZERO)
+                    .vitaminB6(BigDecimal.ZERO)
+                    .vitaminB9(BigDecimal.ZERO)
                     .build());
         }
 
@@ -168,6 +176,14 @@ public class DailyLogService {
                 dto.setVitaminD(dto.getVitaminD().add(safe(info.getVitaminD()).multiply(ratio)));
                 dto.setVitaminE(dto.getVitaminE().add(safe(info.getVitaminE()).multiply(ratio)));
                 dto.setVitaminB12(dto.getVitaminB12().add(safe(info.getVitaminB12()).multiply(ratio)));
+                dto.setMagnesium(dto.getMagnesium().add(safe(info.getMagnesium()).multiply(ratio)));
+                dto.setZinc(dto.getZinc().add(safe(info.getZinc()).multiply(ratio)));
+                dto.setVitaminK(dto.getVitaminK().add(safe(info.getVitaminK()).multiply(ratio)));
+                dto.setVitaminB1(dto.getVitaminB1().add(safe(info.getVitaminB1()).multiply(ratio)));
+                dto.setVitaminB2(dto.getVitaminB2().add(safe(info.getVitaminB2()).multiply(ratio)));
+                dto.setVitaminB3(dto.getVitaminB3().add(safe(info.getVitaminB3()).multiply(ratio)));
+                dto.setVitaminB6(dto.getVitaminB6().add(safe(info.getVitaminB6()).multiply(ratio)));
+                dto.setVitaminB9(dto.getVitaminB9().add(safe(info.getVitaminB9()).multiply(ratio)));
             }
         }
 
@@ -206,6 +222,14 @@ public class DailyLogService {
             dto.setVitaminD(dto.getVitaminD().setScale(2, RoundingMode.HALF_UP));
             dto.setVitaminE(dto.getVitaminE().setScale(2, RoundingMode.HALF_UP));
             dto.setVitaminB12(dto.getVitaminB12().setScale(2, RoundingMode.HALF_UP));
+            dto.setMagnesium(dto.getMagnesium().setScale(2, RoundingMode.HALF_UP));
+            dto.setZinc(dto.getZinc().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminK(dto.getVitaminK().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminB1(dto.getVitaminB1().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminB2(dto.getVitaminB2().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminB3(dto.getVitaminB3().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminB6(dto.getVitaminB6().setScale(2, RoundingMode.HALF_UP));
+            dto.setVitaminB9(dto.getVitaminB9().setScale(2, RoundingMode.HALF_UP));
 
             result.add(dto);
         }

@@ -24,6 +24,15 @@ import java.util.List;
 public class StatsController {
 
     private final StatsService statsService;
+    private final com.nutritiontracker.modules.stats.service.RdaService rdaService;
+
+    @GetMapping("/rda")
+    @Operation(summary = "Get User RDA", description = "Get Recommended Daily Allowances for the current user based on profile")
+    public ResponseEntity<ApiResponse<RdaDto>> getRda(@AuthenticationPrincipal User user) {
+        log.info("REST request to get RDA for userId: {}", user.getId());
+        RdaDto data = rdaService.getRdaForUser(user.getId());
+        return ResponseEntity.ok(ApiResponse.success("RDA retrieved successfully", data));
+    }
 
     @GetMapping("/weight-history")
     @Operation(summary = "Get weight history", description = "Get weight data points with moving average for a date range")

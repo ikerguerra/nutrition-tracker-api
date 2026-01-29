@@ -38,4 +38,12 @@ public class NutrientBreakdownDto {
     private BigDecimal vitaminD;
     private BigDecimal vitaminE;
     private BigDecimal vitaminB12;
+    private BigDecimal magnesium;
+    private BigDecimal zinc;
+    private BigDecimal vitaminK;
+    private BigDecimal vitaminB1;
+    private BigDecimal vitaminB2;
+    private BigDecimal vitaminB3;
+    private BigDecimal vitaminB6;
+    private BigDecimal vitaminB9;
 }

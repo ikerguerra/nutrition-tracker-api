@@ -4,6 +4,12 @@ spring:
   
   profiles:
     active: dev
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+    cache-duration: PT1H
+    fallback-to-system-locale: false
   
   jpa:
     open-in-view: false

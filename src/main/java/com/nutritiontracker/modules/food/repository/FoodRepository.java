@@ -10,63 +10,65 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 @Repository
-public interface FoodRepository extends JpaRepository<Food, Long> {
+public interface FoodRepository extends JpaRepository<Food, Long>, JpaSpecificationExecutor<Food> {
 
-    /**
-     * Find food by barcode
-     */
-    Optional<Food> findByBarcode(String barcode);
+        /**
+         * Find food by barcode
+         */
+        Optional<Food> findByBarcode(String barcode);
 
-    /**
-     * Check if barcode exists
-     */
-    boolean existsByBarcode(String barcode);
+        /**
+         * Check if barcode exists
+         */
+        boolean existsByBarcode(String barcode);
 
-    /**
-     * Search foods by name (case-insensitive, partial match)
-     */
-    @Query("SELECT f FROM Food f WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-    Page<Food> searchByName(@Param("name") String name, Pageable pageable);
+        /**
+         * Search foods by name (case-insensitive, partial match)
+         */
+        @Query("SELECT f FROM Food f WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+        Page<Food> searchByName(@Param("name") String name, Pageable pageable);
 
-    /**
-     * Search foods by brand (case-insensitive, partial match)
-     */
-    @Query("SELECT f FROM Food f WHERE LOWER(f.brand) LIKE LOWER(CONCAT('%', :brand, '%'))")
-    Page<Food> searchByBrand(@Param("brand") String brand, Pageable pageable);
+        /**
+         * Search foods by brand (case-insensitive, partial match)
+         */
+        @Query("SELECT f FROM Food f WHERE LOWER(f.brand) LIKE LOWER(CONCAT('%', :brand, '%'))")
+        Page<Food> searchByBrand(@Param("brand") String brand, Pageable pageable);
 
-    /**
-     * Search foods by name or brand
-     */
-    @Query("SELECT f FROM Food f WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(f.brand) LIKE LOWER(CONCAT('%', :query, '%'))")
-    Page<Food> searchByNameOrBrand(@Param("query") String query, Pageable pageable);
+        /**
+         * Search foods by name or brand
+         */
+        @Query("SELECT f FROM Food f WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+                        "OR LOWER(f.brand) LIKE LOWER(CONCAT('%', :query, '%'))")
+        Page<Food> searchByNameOrBrand(@Param("query") String query, Pageable pageable);
 
-    /**
-     * Find food with nutritional info eagerly loaded
-     */
-    @Query("SELECT f FROM Food f LEFT JOIN FETCH f.nutritionalInfo WHERE f.id = :id")
-    Optional<Food> findByIdWithNutritionalInfo(@Param("id") Long id);
+        /**
+         * Find food with nutritional info eagerly loaded
+         */
+        @Query("SELECT f FROM Food f LEFT JOIN FETCH f.nutritionalInfo WHERE f.id = :id")
+        Optional<Food> findByIdWithNutritionalInfo(@Param("id") Long id);
 
-    /**
-     * Find food by barcode with nutritional info eagerly loaded
-     */
-    @Query("SELECT f FROM Food f LEFT JOIN FETCH f.nutritionalInfo WHERE f.barcode = :barcode")
-    Optional<Food> findByBarcodeWithNutritionalInfo(@Param("barcode") String barcode);
+        /**
+         * Find food by barcode with nutritional info eagerly loaded
+         */
+        @Query("SELECT f FROM Food f LEFT JOIN FETCH f.nutritionalInfo WHERE f.barcode = :barcode")
+        Optional<Food> findByBarcodeWithNutritionalInfo(@Param("barcode") String barcode);
 
-    /**
-     * Find foods by category
-     */
-    Page<Food> findByCategory(com.nutritiontracker.modules.food.enums.FoodCategory category, Pageable pageable);
+        /**
+         * Find foods by category
+         */
+        Page<Food> findByCategory(com.nutritiontracker.modules.food.enums.FoodCategory category, Pageable pageable);
 
-    /**
-     * Search foods by name or brand and filter by category
-     */
-    @Query("SELECT f FROM Food f WHERE " +
-            "(LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(f.brand) LIKE LOWER(CONCAT('%', :query, '%'))) "
-            +
-            "AND f.category = :category")
-    Page<Food> searchByNameOrBrandAndCategory(@Param("query") String query,
-            @Param("category") com.nutritiontracker.modules.food.enums.FoodCategory category,
-            Pageable pageable);
+        /**
+         * Search foods by name or brand and filter by category
+         */
+        @Query("SELECT f FROM Food f WHERE " +
+                        "(LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(f.brand) LIKE LOWER(CONCAT('%', :query, '%'))) "
+                        +
+                        "AND f.category = :category")
+        Page<Food> searchByNameOrBrandAndCategory(@Param("query") String query,
+                        @Param("category") com.nutritiontracker.modules.food.enums.FoodCategory category,
+                        Pageable pageable);
 }

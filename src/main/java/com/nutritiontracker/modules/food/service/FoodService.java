@@ -69,26 +69,30 @@ public class FoodService {
     /**
      * Search foods by name, brand, and optionally filter by category
      */
-    public Page<FoodResponseDto> searchFoods(String query,
-            com.nutritiontracker.modules.food.enums.FoodCategory category, Pageable pageable) {
-        log.debug("Searching foods with query: {}, category: {}", query, category);
+    /**
+     * Search foods with advanced filters
+     */
+    public Page<FoodResponseDto> searchFoods(
+            String query,
+            com.nutritiontracker.modules.food.enums.FoodCategory category,
+            java.math.BigDecimal minCalories, java.math.BigDecimal maxCalories,
+            java.math.BigDecimal minProtein, java.math.BigDecimal maxProtein,
+            java.math.BigDecimal minCarbs, java.math.BigDecimal maxCarbs,
+            java.math.BigDecimal minFats, java.math.BigDecimal maxFats,
+            Pageable pageable) {
 
-        if ((query == null || query.isBlank()) && category == null) {
-            return getAllFoods(pageable);
-        }
+        log.debug("Searching foods with filters: query={}, category={}, minCal={}, maxCal={}",
+                query, category, minCalories, maxCalories);
 
-        Page<Food> foods;
-        if (category != null && (query == null || query.isBlank())) {
-            // Category only
-            foods = foodRepository.findByCategory(category, pageable);
-        } else if (category == null) {
-            // Query only
-            foods = foodRepository.searchByNameOrBrand(query.trim(), pageable);
-        } else {
-            // Both query and category
-            foods = foodRepository.searchByNameOrBrandAndCategory(query.trim(), category, pageable);
-        }
+        org.springframework.data.jpa.domain.Specification<Food> spec = com.nutritiontracker.modules.food.repository.FoodSpecifications
+                .withFilters(
+                        query, category,
+                        minCalories, maxCalories,
+                        minProtein, maxProtein,
+                        minCarbs, maxCarbs,
+                        minFats, maxFats);
 
+        Page<Food> foods = foodRepository.findAll(spec, pageable);
         return foods.map(foodMapper::toDto);
     }
 

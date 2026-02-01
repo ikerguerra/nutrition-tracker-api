@@ -27,9 +27,13 @@ public class FoodClassificationService {
         if (calories.compareTo(BigDecimal.ZERO) <= 0)
             return FoodCategory.UNKNOWN;
 
-        BigDecimal proteinCals = nutrition.getProtein().multiply(BigDecimal.valueOf(4));
-        BigDecimal carbCals = nutrition.getCarbohydrates().multiply(BigDecimal.valueOf(4));
-        BigDecimal fatCals = nutrition.getFats().multiply(BigDecimal.valueOf(9));
+        BigDecimal p = nutrition.getProtein() != null ? nutrition.getProtein() : BigDecimal.ZERO;
+        BigDecimal c = nutrition.getCarbohydrates() != null ? nutrition.getCarbohydrates() : BigDecimal.ZERO;
+        BigDecimal f = nutrition.getFats() != null ? nutrition.getFats() : BigDecimal.ZERO;
+
+        BigDecimal proteinCals = p.multiply(BigDecimal.valueOf(4));
+        BigDecimal carbCals = c.multiply(BigDecimal.valueOf(4));
+        BigDecimal fatCals = f.multiply(BigDecimal.valueOf(9));
 
         // Ratios
         BigDecimal proteinRatio = proteinCals.divide(calories, 4, RoundingMode.HALF_UP);

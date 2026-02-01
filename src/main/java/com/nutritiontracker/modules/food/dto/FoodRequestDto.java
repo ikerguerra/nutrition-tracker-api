@@ -35,6 +35,28 @@ public class FoodRequestDto {
     @NotNull(message = "Nutritional information is required")
     private NutritionalInfoDto nutritionalInfo;
 
+    @Valid
+    private java.util.List<ServingUnitDto> servingUnits;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ServingUnitDto {
+        private Long id; // Optional for creation
+
+        @NotBlank(message = "Label is required")
+        private String label;
+
+        @NotNull(message = "Weight is required")
+        @DecimalMin(value = "0.0", inclusive = false, message = "Weight must be greater than 0")
+        private BigDecimal weightGrams;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("isDefault")
+        private boolean isDefault;
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor

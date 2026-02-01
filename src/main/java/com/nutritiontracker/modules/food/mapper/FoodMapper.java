@@ -27,6 +27,13 @@ public class FoodMapper {
             food.setNutritionalInfo(nutritionalInfo);
         }
 
+        if (dto.getServingUnits() != null) {
+            dto.getServingUnits().forEach(unitDto -> {
+                com.nutritiontracker.modules.food.entity.ServingUnit unit = toServingUnitEntity(unitDto);
+                food.addServingUnit(unit);
+            });
+        }
+
         return food;
     }
 
@@ -50,6 +57,19 @@ public class FoodMapper {
                 .nutritionalInfo(nutritionalInfoDto)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .servingUnits(entity.getServingUnits() != null ? entity.getServingUnits().stream()
+                        .map(this::toServingUnitDto)
+                        .collect(java.util.stream.Collectors.toList()) : null)
+                .build();
+    }
+
+    private FoodResponseDto.ServingUnitDto toServingUnitDto(
+            com.nutritiontracker.modules.food.entity.ServingUnit entity) {
+        return FoodResponseDto.ServingUnitDto.builder()
+                .id(entity.getId())
+                .label(entity.getLabel())
+                .weightGrams(entity.getWeightGrams())
+                .isDefault(entity.isDefault())
                 .build();
     }
 
@@ -72,6 +92,23 @@ public class FoodMapper {
                 updateNutritionalInfoFromDto(dto.getNutritionalInfo(), entity.getNutritionalInfo());
             }
         }
+
+        if (dto.getServingUnits() != null) {
+            entity.getServingUnits().clear();
+            dto.getServingUnits().forEach(unitDto -> {
+                com.nutritiontracker.modules.food.entity.ServingUnit unit = toServingUnitEntity(unitDto);
+                entity.addServingUnit(unit);
+            });
+        }
+    }
+
+    private com.nutritiontracker.modules.food.entity.ServingUnit toServingUnitEntity(
+            FoodRequestDto.ServingUnitDto dto) {
+        return com.nutritiontracker.modules.food.entity.ServingUnit.builder()
+                .label(dto.getLabel())
+                .weightGrams(dto.getWeightGrams())
+                .isDefault(dto.isDefault())
+                .build();
     }
 
     private NutritionalInfo toNutritionalInfoEntity(FoodRequestDto.NutritionalInfoDto dto) {

@@ -30,4 +30,6 @@ public class MealEntryRequestDto {
 
     @NotNull(message = "Unit is required")
     private String unit;
+
+    private Long servingUnitId; // Optional, for custom serving units
 }

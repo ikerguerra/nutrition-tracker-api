@@ -22,6 +22,20 @@ public class FoodResponseDto {
     private NutritionalInfoDto nutritionalInfo;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private java.util.List<ServingUnitDto> servingUnits;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ServingUnitDto {
+        private Long id;
+        private String label;
+        private BigDecimal weightGrams;
+        @com.fasterxml.jackson.annotation.JsonProperty("isDefault")
+        private boolean isDefault;
+    }
 
     @Getter
     @Setter

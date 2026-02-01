@@ -237,4 +237,15 @@ public class FoodController {
 
                 return ResponseEntity.ok(ApiResponse.success(count));
         }
+
+        @GetMapping("/{id}/calculate")
+        @Operation(summary = "Calculate nutrition", description = "Calculates nutritional info for a specific quantity (and optional serving unit)")
+        public ResponseEntity<ApiResponse<FoodResponseDto.NutritionalInfoDto>> calculateNutrition(
+                        @PathVariable Long id,
+                        @RequestParam(required = false) Long servingUnitId,
+                        @RequestParam java.math.BigDecimal quantity) {
+
+                return ResponseEntity.ok(ApiResponse.success(
+                                foodService.calculateNutrition(id, servingUnitId, quantity)));
+        }
 }

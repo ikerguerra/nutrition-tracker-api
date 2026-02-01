@@ -62,6 +62,23 @@ public class Food {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<ServingUnit> servingUnits = new java.util.ArrayList<>();
+
+    public void addServingUnit(ServingUnit servingUnit) {
+        if (servingUnit.isDefault()) {
+            this.servingUnits.forEach(u -> u.setDefault(false));
+        }
+        servingUnits.add(servingUnit);
+        servingUnit.setFood(this);
+    }
+
+    public void removeServingUnit(ServingUnit servingUnit) {
+        servingUnits.remove(servingUnit);
+        servingUnit.setFood(null);
+    }
+
     // Helper method to set bidirectional relationship
     public void setNutritionalInfo(NutritionalInfo nutritionalInfo) {
         if (nutritionalInfo == null) {

@@ -81,4 +81,40 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+    @Transactional
+    public AuthResponse loginOAuth2(org.springframework.security.oauth2.core.user.OAuth2User oAuth2User,
+            String providerId) {
+        String email = oAuth2User.getAttribute("email");
+        String firstName = oAuth2User.getAttribute("given_name");
+        String lastName = oAuth2User.getAttribute("family_name");
+
+        if (email == null) {
+            throw new IllegalArgumentException("Email not found from OAuth2 provider");
+        }
+
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
+            User newUser = User.builder()
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .email(email)
+                    .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
+                    .provider(AuthProvider.GOOGLE)
+                    .providerId(providerId)
+                    .enabled(true)
+                    .emailVerified(true)
+                    .build();
+            User saved = userRepository.save(newUser);
+            userProfileService.createDefaultProfile(saved);
+            return saved;
+        });
+
+        String accessToken = tokenProvider.generateAccessToken(user.getEmail());
+        String refreshToken = tokenProvider.generateRefreshToken(user.getEmail());
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
 }

@@ -13,6 +13,7 @@ import com.nutritiontracker.modules.dailylog.repository.MealEntryRepository;
 import com.nutritiontracker.modules.food.entity.Food;
 import com.nutritiontracker.modules.food.entity.NutritionalInfo;
 import com.nutritiontracker.modules.food.repository.FoodRepository;
+import com.nutritiontracker.modules.auth.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class DailyLogService {
     private final MealEntryRepository mealEntryRepository;
     private final FoodRepository foodRepository;
     private final UserProfileRepository userProfileRepository;
+    private final UserProfileService userProfileService;
 
     /**
      * Get daily log for a specific date. Creates one if it doesn't exist.
@@ -257,6 +259,13 @@ public class DailyLogService {
 
         recalculateTotals(dailyLog);
         DailyLog savedLog = dailyLogRepository.save(dailyLog);
+
+        // Award XP for logging food
+        try {
+            userProfileService.addXp(userId, 10);
+        } catch (Exception e) {
+            log.warn("Failed to award XP for user {}", userId, e);
+        }
 
         return mapToDto(savedLog, userId);
     }

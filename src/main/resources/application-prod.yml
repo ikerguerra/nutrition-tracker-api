@@ -80,3 +80,25 @@ logging:
     com.nutritiontracker: INFO
     org.springframework.web: WARN
     org.hibernate.SQL: WARN
+
+# Actuator — in production only /health is fully public; others require ADMIN role
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+# Sentry — required in production to capture errors
+sentry:
+  dsn: ${SENTRY_DSN:}
+  traces-sample-rate: 0.2
+  environment: production
+  logging:
+    minimum-event-level: WARN
+    minimum-breadcrumb-level: INFO

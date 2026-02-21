@@ -35,4 +35,11 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
      * Check if log exists for user and date
      */
     boolean existsByUserIdAndDate(Long userId, LocalDate date);
+
+    /**
+     * Find daily logs by user and date range with meal entries eagerly loaded
+     */
+    @Query("SELECT DISTINCT dl FROM DailyLog dl LEFT JOIN FETCH dl.mealEntries me LEFT JOIN FETCH me.food WHERE dl.userId = :userId AND dl.date BETWEEN :startDate AND :endDate ORDER BY dl.date ASC")
+    List<DailyLog> findByUserIdAndDateBetweenWithEntries(@Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

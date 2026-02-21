@@ -39,6 +39,10 @@ public class UserProfileResponse {
     private BigDecimal customCarbsPercentage;
     private BigDecimal customFatsPercentage;
 
+    // Gamification
+    private Integer xp;
+    private Integer level;
+
     public static UserProfileResponse fromEntity(UserProfile profile) {
         return UserProfileResponse.builder()
                 .id(profile.getId())
@@ -60,6 +64,8 @@ public class UserProfileResponse {
                 .customProteinPercentage(profile.getCustomProteinPercentage())
                 .customCarbsPercentage(profile.getCustomCarbsPercentage())
                 .customFatsPercentage(profile.getCustomFatsPercentage())
+                .xp(profile.getXp())
+                .level(profile.getLevel())
                 .build();
     }
 }

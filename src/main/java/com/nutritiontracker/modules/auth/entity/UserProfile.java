@@ -87,6 +87,14 @@ public class UserProfile {
     @Column(name = "custom_fats_percentage", precision = 5, scale = 2)
     private BigDecimal customFatsPercentage;
 
+    @Column(name = "xp", nullable = false)
+    @Builder.Default
+    private Integer xp = 0;
+
+    @Column(name = "level", nullable = false)
+    @Builder.Default
+    private Integer level = 1;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

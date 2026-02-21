@@ -44,11 +44,42 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
 
+# Actuator — health and info exposed without auth; all others secured
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+  info:
+    env:
+      enabled: true
+
+# Application info shown in /actuator/info
+info:
+  app:
+    name: Nutrition Tracker API
+    version: 1.0.0
+    description: Backend API for nutrition tracking application
+
+# Sentry — DSN is read from env var SENTRY_DSN; set to empty string to disable
+sentry:
+  dsn: ${SENTRY_DSN:}
+  traces-sample-rate: 0.1
+  environment: ${SPRING_PROFILES_ACTIVE:dev}
+  logging:
+    minimum-event-level: ERROR
+    minimum-breadcrumb-level: WARN
+
 # Logging
 logging:
   level:
     root: INFO
     com.nutritiontracker: DEBUG
-    org.springframework.web: DEBUG
+    org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE

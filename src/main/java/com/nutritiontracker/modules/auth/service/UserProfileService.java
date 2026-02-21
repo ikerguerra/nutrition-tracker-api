@@ -62,4 +62,22 @@ public class UserProfileService {
         profile.setDailyCarbsGoal(BigDecimal.valueOf(macros[1]));
         profile.setDailyFatsGoal(BigDecimal.valueOf(macros[2]));
     }
+
+    @Transactional
+    public UserProfile addXp(Long userId, int xpAmount) {
+        UserProfile profile = getProfileByUserId(userId);
+
+        int currentXp = profile.getXp() != null ? profile.getXp() : 0;
+        currentXp += xpAmount;
+        profile.setXp(currentXp);
+
+        // Level calculation based on XP: Level = floor(sqrt(xp / 100)) + 1
+        int calculatedLevel = (int) Math.floor(Math.sqrt((double) currentXp / 100)) + 1;
+
+        if (calculatedLevel > (profile.getLevel() != null ? profile.getLevel() : 1)) {
+            profile.setLevel(calculatedLevel);
+        }
+
+        return userProfileRepository.save(profile);
+    }
 }

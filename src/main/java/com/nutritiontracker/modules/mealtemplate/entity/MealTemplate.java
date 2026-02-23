@@ -25,7 +25,7 @@ public class MealTemplate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private Long userId;
 
     @Column(nullable = false, length = 100)
@@ -41,6 +41,10 @@ public class MealTemplate {
     @Column(name = "is_public")
     @Builder.Default
     private Boolean isPublic = false;
+
+    @Column(name = "is_system", nullable = false)
+    @Builder.Default
+    private Boolean isSystem = false;
 
     @OneToMany(mappedBy = "mealTemplate", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

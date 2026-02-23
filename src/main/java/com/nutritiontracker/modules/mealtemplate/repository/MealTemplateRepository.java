@@ -12,12 +12,12 @@ import java.util.Optional;
 @Repository
 public interface MealTemplateRepository extends JpaRepository<MealTemplate, Long> {
 
-    @Query("SELECT DISTINCT mt FROM MealTemplate mt LEFT JOIN FETCH mt.items i LEFT JOIN FETCH i.food f LEFT JOIN FETCH f.nutritionalInfo WHERE mt.userId = :userId")
-    List<MealTemplate> findByUserId(@Param("userId") Long userId);
+    @Query("SELECT DISTINCT mt FROM MealTemplate mt LEFT JOIN FETCH mt.items i LEFT JOIN FETCH i.food f LEFT JOIN FETCH f.nutritionalInfo WHERE mt.userId = :userId OR mt.isSystem = true")
+    List<MealTemplate> findByUserIdOrSystemTrue(@Param("userId") Long userId);
 
     @Query("SELECT mt FROM MealTemplate mt LEFT JOIN FETCH mt.items i LEFT JOIN FETCH i.food f LEFT JOIN FETCH f.nutritionalInfo WHERE mt.id = :id")
     Optional<MealTemplate> findByIdWithItems(@Param("id") Long id);
 
-    @Query("SELECT mt FROM MealTemplate mt WHERE mt.isPublic = true OR mt.userId = :userId")
-    List<MealTemplate> findPublicOrUserTemplates(@Param("userId") Long userId);
+    @Query("SELECT mt FROM MealTemplate mt WHERE mt.isPublic = true OR mt.userId = :userId OR mt.isSystem = true")
+    List<MealTemplate> findPublicOrUserOrSystemTemplates(@Param("userId") Long userId);
 }

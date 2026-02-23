@@ -1,5 +1,5 @@
 -- V13: Create achievements table
-CREATE TABLE achievements (
+CREATE TABLE IF NOT EXISTS achievements (
     id BIGINT NOT NULL AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     type VARCHAR(50) NOT NULL,

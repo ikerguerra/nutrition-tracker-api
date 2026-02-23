@@ -77,7 +77,7 @@ public class MealTemplateController {
             @Valid @RequestBody MealTemplateRequestDto request) {
 
         MealTemplate template = mealTemplateMapper.toEntity(request, user.getId());
-        MealTemplate updatedTemplate = mealTemplateService.updateTemplate(id, template);
+        MealTemplate updatedTemplate = mealTemplateService.updateTemplate(id, template, user.getId());
 
         return ResponseEntity
                 .ok(ApiResponse.success("Template updated successfully", mealTemplateMapper.toDto(updatedTemplate)));
@@ -86,9 +86,10 @@ public class MealTemplateController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete template", description = "Removes a meal template")
     public ResponseEntity<ApiResponse<Void>> deleteTemplate(
+            @AuthenticationPrincipal User user,
             @PathVariable Long id) {
 
-        mealTemplateService.deleteTemplate(id);
+        mealTemplateService.deleteTemplate(id, user.getId());
         return ResponseEntity.ok(ApiResponse.success("Template deleted successfully", null));
     }
 

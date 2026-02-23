@@ -20,7 +20,7 @@ spring:
 
   # Flyway Configuration
   flyway:
-    enabled: false  # Temporarily disabled to bypass migration issues
+    enabled: true
     clean-disabled: true
   
   # Security OAuth2 Configuration

@@ -17,6 +17,7 @@ public class MealTemplateResponseDto {
     private String description;
     private MealType mealType;
     private Boolean isPublic;
+    private Boolean isSystem;
     private List<MealTemplateItemResponseDto> items;
 
     @Getter

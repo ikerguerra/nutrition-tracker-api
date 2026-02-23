@@ -1,4 +1,5 @@
-CREATE TABLE push_subscriptions (
+-- V15__create_push_subscriptions_table.sql
+CREATE TABLE IF NOT EXISTS push_subscriptions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     endpoint TEXT NOT NULL,

@@ -25,7 +25,7 @@ public class MealTemplateService {
 
     @Transactional(readOnly = true)
     public List<MealTemplate> getUserTemplates(Long userId) {
-        return mealTemplateRepository.findByUserId(userId);
+        return mealTemplateRepository.findByUserIdOrSystemTrue(userId);
     }
 
     @Transactional(readOnly = true)
@@ -41,8 +41,16 @@ public class MealTemplateService {
     }
 
     @Transactional
-    public MealTemplate updateTemplate(Long id, MealTemplate updatedTemplate) {
+    public MealTemplate updateTemplate(Long id, MealTemplate updatedTemplate, Long userId) {
         MealTemplate existing = getTemplateById(id);
+
+        if (Boolean.TRUE.equals(existing.getIsSystem())) {
+            throw new IllegalArgumentException("Cannot update a system template");
+        }
+        if (!existing.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("User does not own this template");
+        }
+
         existing.setName(updatedTemplate.getName());
         existing.setDescription(updatedTemplate.getDescription());
         existing.setMealType(updatedTemplate.getMealType());
@@ -58,7 +66,16 @@ public class MealTemplateService {
     }
 
     @Transactional
-    public void deleteTemplate(Long id) {
+    public void deleteTemplate(Long id, Long userId) {
+        MealTemplate existing = getTemplateById(id);
+
+        if (Boolean.TRUE.equals(existing.getIsSystem())) {
+            throw new IllegalArgumentException("Cannot delete a system template");
+        }
+        if (!existing.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("User does not own this template");
+        }
+
         mealTemplateRepository.deleteById(id);
     }
 

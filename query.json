@@ -1,0 +1,28 @@
+{
+    "query": {
+        "bool": {
+            "should": [
+                {
+                    "multi_match": {
+                        "query": "paneci",
+                        "fields": [
+                            "name^2",
+                            "brand"
+                        ],
+                        "fuzziness": "AUTO"
+                    }
+                },
+                {
+                    "multi_match": {
+                        "query": "paneci",
+                        "fields": [
+                            "name^2",
+                            "brand"
+                        ],
+                        "type": "bool_prefix"
+                    }
+                }
+            ]
+        }
+    }
+}

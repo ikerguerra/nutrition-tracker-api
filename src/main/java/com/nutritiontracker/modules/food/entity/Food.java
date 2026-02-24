@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "foods")
-@EntityListeners(AuditingEntityListener.class)
+@EntityListeners({ AuditingEntityListener.class, com.nutritiontracker.modules.food.listener.FoodSyncListener.class })
 @Getter
 @Setter
 @NoArgsConstructor

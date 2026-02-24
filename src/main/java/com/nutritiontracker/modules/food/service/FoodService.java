@@ -9,7 +9,11 @@ import com.nutritiontracker.modules.food.mapper.FoodMapper;
 import com.nutritiontracker.modules.food.repository.FoodRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class FoodService {
 
     private final FoodRepository foodRepository;
+    private final com.nutritiontracker.modules.food.repository.ElasticFoodRepository elasticFoodRepository;
     private final FoodMapper foodMapper;
 
     /**
      * Create a new food
      */
     @Transactional
+    @CacheEvict(value = { "frequentFoods", "recentFoods" }, allEntries = true)
     public FoodResponseDto createFood(FoodRequestDto requestDto) {
         log.info("Creating new food: {}", requestDto.getName());
 
@@ -47,6 +53,7 @@ public class FoodService {
     /**
      * Get food by ID
      */
+    @Cacheable(value = "foodById", key = "#id")
     public FoodResponseDto getFoodById(Long id) {
         log.debug("Fetching food with id: {}", id);
 
@@ -84,6 +91,41 @@ public class FoodService {
         log.debug("Searching foods with filters: query={}, category={}, minCal={}, maxCal={}",
                 query, category, minCalories, maxCalories);
 
+        // If query is present and complex, delegate to Elasticsearch
+        if (query != null && !query.trim().isEmpty()) {
+            log.debug("Using Elasticsearch for complex text query: {}", query);
+
+            // Remove sort from pageable to let Elasticsearch sort by relevance score
+            // Sorting on a text field like 'name' throws fielddata=true exception
+            Pageable esPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+
+            Page<com.nutritiontracker.modules.food.entity.ElasticFoodDocument> elasticPage = elasticFoodRepository
+                    .fuzzySearch(query, esPageable);
+
+            if (elasticPage.isEmpty()) {
+                return Page.empty(pageable);
+            }
+
+            java.util.List<Long> ids = elasticPage.getContent().stream()
+                    .map(doc -> Long.valueOf(doc.getId()))
+                    .toList();
+
+            // Fetch from MySQL to get full entity info
+            java.util.List<Food> foods = foodRepository.findAllById(ids);
+
+            // Re-order based on ElasticSearch relevance score order
+            java.util.Map<Long, Food> foodMap = foods.stream()
+                    .collect(java.util.stream.Collectors.toMap(Food::getId, f -> f));
+
+            java.util.List<FoodResponseDto> sortedDtos = ids.stream()
+                    .map(foodMap::get)
+                    .filter(java.util.Objects::nonNull)
+                    .map(foodMapper::toDto)
+                    .toList();
+
+            return new org.springframework.data.domain.PageImpl<>(sortedDtos, pageable, elasticPage.getTotalElements());
+        }
+
         org.springframework.data.jpa.domain.Specification<Food> spec = com.nutritiontracker.modules.food.repository.FoodSpecifications
                 .withFilters(
                         query, category,
@@ -100,6 +142,7 @@ public class FoodService {
      * Update existing food
      */
     @Transactional
+    @CacheEvict(value = { "foodById", "frequentFoods", "recentFoods" }, allEntries = true)
     public FoodResponseDto updateFood(Long id, FoodRequestDto requestDto) {
         log.info("Updating food with id: {}", id);
 
@@ -126,6 +169,7 @@ public class FoodService {
      * Delete food by ID
      */
     @Transactional
+    @CacheEvict(value = { "foodById", "frequentFoods", "recentFoods" }, allEntries = true)
     public void deleteFood(Long id) {
         log.info("Deleting food with id: {}", id);
 

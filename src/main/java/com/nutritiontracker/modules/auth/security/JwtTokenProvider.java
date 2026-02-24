@@ -32,15 +32,19 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return generateAccessToken(userDetails.getUsername());
+        return generateAccessToken(userDetails.getUsername(), "", ""); // Fallback if needed, though we should prefer
+                                                                       // the other method
     }
 
-    public String generateAccessToken(String email) {
+    public String generateAccessToken(String email, String firstName, String lastName) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
                 .subject(email)
+                .claim("firstName", firstName)
+                .claim("lastName", lastName)
+                .claim("email", email)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())

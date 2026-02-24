@@ -62,7 +62,7 @@ class AuthServiceTest {
                 .build();
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        when(tokenProvider.generateAccessToken(email)).thenReturn("accessToken");
+        when(tokenProvider.generateAccessToken(email, firstName, lastName)).thenReturn("accessToken");
         when(tokenProvider.generateRefreshToken(email)).thenReturn("refreshToken");
 
         // Act
@@ -99,7 +99,7 @@ class AuthServiceTest {
                 .build();
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
-        when(tokenProvider.generateAccessToken(email)).thenReturn("accessToken");
+        when(tokenProvider.generateAccessToken(email, firstName, lastName)).thenReturn("accessToken");
         when(tokenProvider.generateRefreshToken(email)).thenReturn("refreshToken");
 
         // Act

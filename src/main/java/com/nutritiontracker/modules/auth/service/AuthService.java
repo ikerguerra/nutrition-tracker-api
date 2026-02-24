@@ -44,7 +44,8 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         userProfileService.createDefaultProfile(savedUser);
 
-        String accessToken = tokenProvider.generateAccessToken(savedUser.getEmail());
+        String accessToken = tokenProvider.generateAccessToken(savedUser.getEmail(), savedUser.getFirstName(),
+                savedUser.getLastName());
         String refreshToken = tokenProvider.generateRefreshToken(savedUser.getEmail());
 
         return AuthResponse.builder()
@@ -59,8 +60,12 @@ public class AuthService {
                         request.getEmail(),
                         request.getPassword()));
 
-        String accessToken = tokenProvider.generateAccessToken(request.getEmail());
-        String refreshToken = tokenProvider.generateRefreshToken(request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        String accessToken = tokenProvider.generateAccessToken(user.getEmail(), user.getFirstName(),
+                user.getLastName());
+        String refreshToken = tokenProvider.generateRefreshToken(user.getEmail());
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -74,7 +79,11 @@ public class AuthService {
         }
 
         String email = tokenProvider.getEmailFromToken(refreshToken);
-        String newAccessToken = tokenProvider.generateAccessToken(email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        String newAccessToken = tokenProvider.generateAccessToken(user.getEmail(), user.getFirstName(),
+                user.getLastName());
 
         return AuthResponse.builder()
                 .accessToken(newAccessToken)
@@ -109,7 +118,8 @@ public class AuthService {
             return saved;
         });
 
-        String accessToken = tokenProvider.generateAccessToken(user.getEmail());
+        String accessToken = tokenProvider.generateAccessToken(user.getEmail(), user.getFirstName(),
+                user.getLastName());
         String refreshToken = tokenProvider.generateRefreshToken(user.getEmail());
 
         return AuthResponse.builder()

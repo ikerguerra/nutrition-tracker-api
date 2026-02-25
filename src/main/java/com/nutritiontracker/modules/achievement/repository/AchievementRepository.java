@@ -19,4 +19,6 @@ public interface AchievementRepository extends JpaRepository<Achievement, Long> 
     Optional<Achievement> findByUserIdAndType(Long userId, AchievementType type);
 
     long countByUserIdAndUnlockedAtIsNotNull(Long userId);
+
+    void deleteByUserId(Long userId);
 }

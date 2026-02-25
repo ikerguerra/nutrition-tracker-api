@@ -16,4 +16,6 @@ public interface DietRecommendationRepository extends JpaRepository<DietRecommen
     List<DietRecommendation> findByUserIdAndDateAndMealType(Long userId, LocalDate date, MealType mealType);
 
     void deleteByUserIdAndDate(Long userId, LocalDate date);
+
+    void deleteByUserId(Long userId);
 }

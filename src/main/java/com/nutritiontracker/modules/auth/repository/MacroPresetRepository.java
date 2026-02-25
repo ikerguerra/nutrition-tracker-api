@@ -17,4 +17,6 @@ public interface MacroPresetRepository extends JpaRepository<MacroPreset, Long> 
     boolean existsByUserIdAndName(Long userId, String name);
 
     Optional<MacroPreset> findByIdAndUserId(Long id, Long userId);
+
+    void deleteByUserId(Long userId);
 }

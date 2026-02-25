@@ -42,4 +42,9 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
     @Query("SELECT DISTINCT dl FROM DailyLog dl LEFT JOIN FETCH dl.mealEntries me LEFT JOIN FETCH me.food WHERE dl.userId = :userId AND dl.date BETWEEN :startDate AND :endDate ORDER BY dl.date ASC")
     List<DailyLog> findByUserIdAndDateBetweenWithEntries(@Param("userId") Long userId,
             @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
+     * Delete all daily logs for a given user
+     */
+    void deleteByUserId(Long userId);
 }

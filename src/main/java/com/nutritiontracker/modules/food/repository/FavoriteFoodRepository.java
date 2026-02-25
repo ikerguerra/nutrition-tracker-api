@@ -17,4 +17,6 @@ public interface FavoriteFoodRepository extends JpaRepository<FavoriteFood, Long
     void deleteByUserIdAndFoodId(Long userId, Long foodId);
 
     boolean existsByUserIdAndFoodId(Long userId, Long foodId);
+
+    void deleteByUserId(Long userId);
 }

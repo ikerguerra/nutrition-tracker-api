@@ -20,4 +20,6 @@ public interface MealTemplateRepository extends JpaRepository<MealTemplate, Long
 
     @Query("SELECT mt FROM MealTemplate mt WHERE mt.isPublic = true OR mt.userId = :userId OR mt.isSystem = true")
     List<MealTemplate> findPublicOrUserOrSystemTemplates(@Param("userId") Long userId);
+
+    void deleteByUserId(Long userId);
 }

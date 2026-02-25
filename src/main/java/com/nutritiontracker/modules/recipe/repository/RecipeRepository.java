@@ -20,4 +20,6 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
 
     @Query("SELECT r FROM Recipe r WHERE r.isPublic = true OR r.userId = :userId")
     List<Recipe> findPublicOrUserRecipes(@Param("userId") Long userId);
+
+    void deleteByUserId(Long userId);
 }

@@ -33,7 +33,7 @@ public class RecommendationController {
     public ResponseEntity<DietPlanResponseDto> generateDailyPlan(
             @AuthenticationPrincipal User user,
             @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "false") boolean forceNew) {
+            @RequestParam(name = "forceNew", defaultValue = "false") boolean forceNew) {
 
         LocalDate targetDate = date != null ? date : LocalDate.now();
         DietPlanResponseDto plan = dietGenerationService.generateOrRegeneratePlan(user.getId(), targetDate, forceNew);

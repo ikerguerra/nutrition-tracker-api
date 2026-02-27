@@ -4,6 +4,7 @@ import com.nutritiontracker.common.exception.ResourceNotFoundException;
 import com.nutritiontracker.modules.recipe.entity.Recipe;
 import com.nutritiontracker.modules.recipe.entity.RecipeIngredient;
 import com.nutritiontracker.modules.recipe.repository.RecipeRepository;
+import com.nutritiontracker.modules.food.repository.FoodRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.List;
 public class RecipeService {
 
     private final RecipeRepository recipeRepository;
+    private final FoodRepository foodRepository;
 
     @Transactional(readOnly = true)
     public List<Recipe> getUserRecipes(Long userId) {
@@ -34,6 +36,7 @@ public class RecipeService {
     @Transactional
     public Recipe createRecipe(Recipe recipe) {
         log.info("Creating new recipe: {}", recipe.getName());
+        populateFoods(recipe);
         return recipeRepository.save(recipe);
     }
 
@@ -54,7 +57,20 @@ public class RecipeService {
             existing.addIngredient(ingredient);
         }
 
+        populateFoods(existing);
+
         return recipeRepository.save(existing);
+    }
+
+    private void populateFoods(Recipe recipe) {
+        if (recipe.getIngredients() != null) {
+            for (RecipeIngredient ingredient : recipe.getIngredients()) {
+                if (ingredient.getFood() != null && ingredient.getFood().getId() != null) {
+                    ingredient.setFood(foodRepository.findById(ingredient.getFood().getId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Food", ingredient.getFood().getId())));
+                }
+            }
+        }
     }
 
     @Transactional

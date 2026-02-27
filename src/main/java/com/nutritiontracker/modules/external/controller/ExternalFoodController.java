@@ -30,8 +30,8 @@ public class ExternalFoodController {
     @Operation(summary = "Search in OpenFoodFacts", description = "Search for products in the OpenFoodFacts database")
     public ResponseEntity<ApiResponse<List<ExternalFoodDTO>>> search(
             @Parameter(description = "Search query") @RequestParam("query") String query,
-            @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number (1-based)") @RequestParam(name = "page", defaultValue = "1") int page,
+            @Parameter(description = "Page size") @RequestParam(name = "size", defaultValue = "20") int size) {
 
         log.info("REST request to search external foods: {}", query);
         List<ExternalFoodDTO> results = openFoodFactsService.searchProducts(query, page, size);
@@ -68,7 +68,7 @@ public class ExternalFoodController {
     @Operation(summary = "Import in batch from OpenFoodFacts", description = "Import products from OpenFoodFacts in batch based on a search query")
     public ResponseEntity<ApiResponse<String>> importBatch(
             @Parameter(description = "Search query") @RequestParam("query") String query,
-            @Parameter(description = "Max pages to process") @RequestParam(defaultValue = "1") int maxPages) {
+            @Parameter(description = "Max pages to process") @RequestParam(name = "maxPages", defaultValue = "1") int maxPages) {
 
         log.info("REST request to import batch for query: {} (maxPages: {})", query, maxPages);
         openFoodFactsService.importBatch(query, maxPages);

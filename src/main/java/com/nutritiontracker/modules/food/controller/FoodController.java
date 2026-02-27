@@ -84,7 +84,7 @@ public class FoodController {
         @Operation(summary = "Get frequent foods", description = "Retrieves most frequently consumed foods")
         public ResponseEntity<ApiResponse<java.util.List<FoodResponseDto>>> getFrequentFoods(
                         @org.springframework.security.core.annotation.AuthenticationPrincipal com.nutritiontracker.modules.auth.entity.User user,
-                        @RequestParam(defaultValue = "10") int limit) {
+                        @RequestParam(name = "limit", defaultValue = "10") int limit) {
 
                 log.info("REST request to get frequent foods for user: {}", user.getId());
                 java.util.List<FoodResponseDto> frequent = foodStatsService.getFrequentFoods(user.getId(), limit);
@@ -129,10 +129,10 @@ public class FoodController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Foods retrieved successfully")
         })
         public ResponseEntity<ApiResponse<Page<FoodResponseDto>>> getAllFoods(
-                        @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-                        @Parameter(description = "Sort by field") @RequestParam(defaultValue = "name") String sortBy,
-                        @Parameter(description = "Sort direction (asc/desc)") @RequestParam(defaultValue = "asc") String direction) {
+                        @Parameter(description = "Page number (0-indexed)") @RequestParam(name = "page", defaultValue = "0") int page,
+                        @Parameter(description = "Page size") @RequestParam(name = "size", defaultValue = "20") int size,
+                        @Parameter(description = "Sort by field") @RequestParam(name = "sortBy", defaultValue = "name") String sortBy,
+                        @Parameter(description = "Sort direction (asc/desc)") @RequestParam(name = "direction", defaultValue = "asc") String direction) {
 
                 log.info("REST request to get all foods - page: {}, size: {}, sortBy: {}, direction: {}",
                                 page, size, sortBy, direction);
@@ -152,18 +152,18 @@ public class FoodController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search completed successfully")
         })
         public ResponseEntity<ApiResponse<Page<FoodResponseDto>>> searchFoods(
-                        @Parameter(description = "Search query") @RequestParam(required = false) String query,
-                        @Parameter(description = "Filter by category") @RequestParam(required = false) com.nutritiontracker.modules.food.enums.FoodCategory category,
-                        @Parameter(description = "Min calories") @RequestParam(required = false) java.math.BigDecimal minCalories,
-                        @Parameter(description = "Max calories") @RequestParam(required = false) java.math.BigDecimal maxCalories,
-                        @Parameter(description = "Min protein") @RequestParam(required = false) java.math.BigDecimal minProtein,
-                        @Parameter(description = "Max protein") @RequestParam(required = false) java.math.BigDecimal maxProtein,
-                        @Parameter(description = "Min carbs") @RequestParam(required = false) java.math.BigDecimal minCarbs,
-                        @Parameter(description = "Max carbs") @RequestParam(required = false) java.math.BigDecimal maxCarbs,
-                        @Parameter(description = "Min fats") @RequestParam(required = false) java.math.BigDecimal minFats,
-                        @Parameter(description = "Max fats") @RequestParam(required = false) java.math.BigDecimal maxFats,
-                        @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+                        @Parameter(description = "Search query") @RequestParam(name = "query", required = false) String query,
+                        @Parameter(description = "Filter by category") @RequestParam(name = "category", required = false) com.nutritiontracker.modules.food.enums.FoodCategory category,
+                        @Parameter(description = "Min calories") @RequestParam(name = "minCalories", required = false) java.math.BigDecimal minCalories,
+                        @Parameter(description = "Max calories") @RequestParam(name = "maxCalories", required = false) java.math.BigDecimal maxCalories,
+                        @Parameter(description = "Min protein") @RequestParam(name = "minProtein", required = false) java.math.BigDecimal minProtein,
+                        @Parameter(description = "Max protein") @RequestParam(name = "maxProtein", required = false) java.math.BigDecimal maxProtein,
+                        @Parameter(description = "Min carbs") @RequestParam(name = "minCarbs", required = false) java.math.BigDecimal minCarbs,
+                        @Parameter(description = "Max carbs") @RequestParam(name = "maxCarbs", required = false) java.math.BigDecimal maxCarbs,
+                        @Parameter(description = "Min fats") @RequestParam(name = "minFats", required = false) java.math.BigDecimal minFats,
+                        @Parameter(description = "Max fats") @RequestParam(name = "maxFats", required = false) java.math.BigDecimal maxFats,
+                        @Parameter(description = "Page number (0-indexed)") @RequestParam(name = "page", defaultValue = "0") int page,
+                        @Parameter(description = "Page size") @RequestParam(name = "size", defaultValue = "20") int size) {
 
                 log.info("REST request to search foods with filters");
 
@@ -242,8 +242,8 @@ public class FoodController {
         @Operation(summary = "Calculate nutrition", description = "Calculates nutritional info for a specific quantity (and optional serving unit)")
         public ResponseEntity<ApiResponse<FoodResponseDto.NutritionalInfoDto>> calculateNutrition(
                         @PathVariable("id") Long id,
-                        @RequestParam(required = false) Long servingUnitId,
-                        @RequestParam("quantity") java.math.BigDecimal quantity) {
+                        @RequestParam(name = "servingUnitId", required = false) Long servingUnitId,
+                        @RequestParam(name = "quantity") java.math.BigDecimal quantity) {
 
                 return ResponseEntity.ok(ApiResponse.success(
                                 foodService.calculateNutrition(id, servingUnitId, quantity)));

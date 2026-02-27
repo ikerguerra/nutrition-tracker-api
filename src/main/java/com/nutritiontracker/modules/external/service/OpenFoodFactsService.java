@@ -184,7 +184,10 @@ public class OpenFoodFactsService {
 
     private Food transformToFood(OpenFoodFactsProduct product) {
         NutritionalInfo nutritionalInfo = NutritionalInfo.builder()
-                .calories(BigDecimal.valueOf(product.getNutriments().getEnergyKcal100g()))
+                .calories(BigDecimal.valueOf(
+                        product.getNutriments().getEnergyKcal100g() != null
+                                ? product.getNutriments().getEnergyKcal100g()
+                                : 0))
                 .protein(BigDecimal.valueOf(
                         product.getNutriments().getProteins100g() != null ? product.getNutriments().getProteins100g()
                                 : 0))

@@ -74,8 +74,8 @@ app:
     refresh-token-expiration: 604800000  # 7 days in milliseconds
   vapid:
     public-key: ${VAPID_PUBLIC_KEY:BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuB-3qNd7tdMDaLNdOq11kBeh0}
-    private-key: ${VAPID_PRIVATE_KEY:YOUR_PRIVATE_KEY_HERE}
-    subject: ${VAPID_SUBJECT:mailto:admin@nutritiontracker.com}
+    private-key: ${VAPID_PRIVATE_KEY:kU6xN3Y_mXpD4fXyP0eHwVp1_b6_Z3-a4qZp2Y8H1zQ}
+    subject: ${VAPID_SUBJECT:mailto:ikerguerra@hotmail.es}
 
 # External API Configuration
 external:

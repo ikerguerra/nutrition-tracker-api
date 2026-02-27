@@ -41,7 +41,7 @@ public class FoodController {
         @PostMapping("/{id}/favorite")
         @Operation(summary = "Add food to favorites", description = "Marks a food item as favorite for the current user")
         public ResponseEntity<ApiResponse<Void>> addFavorite(
-                        @PathVariable Long id,
+                        @PathVariable("id") Long id,
                         @org.springframework.security.core.annotation.AuthenticationPrincipal com.nutritiontracker.modules.auth.entity.User user) {
 
                 log.info("REST request to add favorite food: {} for user: {}", id, user.getId());
@@ -52,7 +52,7 @@ public class FoodController {
         @DeleteMapping("/{id}/favorite")
         @Operation(summary = "Remove food from favorites", description = "Unmarks a food item as favorite")
         public ResponseEntity<ApiResponse<Void>> removeFavorite(
-                        @PathVariable Long id,
+                        @PathVariable("id") Long id,
                         @org.springframework.security.core.annotation.AuthenticationPrincipal com.nutritiontracker.modules.auth.entity.User user) {
 
                 log.info("REST request to remove favorite food: {} for user: {}", id, user.getId());
@@ -115,7 +115,7 @@ public class FoodController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Food not found")
         })
         public ResponseEntity<ApiResponse<FoodResponseDto>> getFoodById(
-                        @Parameter(description = "ID of the food to retrieve") @PathVariable Long id) {
+                        @Parameter(description = "ID of the food to retrieve") @PathVariable("id") Long id) {
 
                 log.info("REST request to get food by id: {}", id);
                 FoodResponseDto food = foodService.getFoodById(id);
@@ -186,7 +186,7 @@ public class FoodController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Food not found")
         })
         public ResponseEntity<ApiResponse<BarcodeSearchResponseDto>> searchByBarcode(
-                        @Parameter(description = "Barcode to search for") @PathVariable String barcode) {
+                        @Parameter(description = "Barcode to search for") @PathVariable("barcode") String barcode) {
 
                 log.info("REST request to search food by barcode: {}", barcode);
                 BarcodeSearchResponseDto result = barcodeService.searchByBarcode(barcode);
@@ -202,7 +202,7 @@ public class FoodController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input data")
         })
         public ResponseEntity<ApiResponse<FoodResponseDto>> updateFood(
-                        @Parameter(description = "ID of the food to update") @PathVariable Long id,
+                        @Parameter(description = "ID of the food to update") @PathVariable("id") Long id,
                         @Valid @RequestBody FoodRequestDto requestDto) {
 
                 log.info("REST request to update food with id: {}", id);
@@ -218,7 +218,7 @@ public class FoodController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Food not found")
         })
         public ResponseEntity<Void> deleteFood(
-                        @Parameter(description = "ID of the food to delete") @PathVariable Long id) {
+                        @Parameter(description = "ID of the food to delete") @PathVariable("id") Long id) {
 
                 log.info("REST request to delete food with id: {}", id);
                 foodService.deleteFood(id);
@@ -241,7 +241,7 @@ public class FoodController {
         @GetMapping("/{id}/calculate")
         @Operation(summary = "Calculate nutrition", description = "Calculates nutritional info for a specific quantity (and optional serving unit)")
         public ResponseEntity<ApiResponse<FoodResponseDto.NutritionalInfoDto>> calculateNutrition(
-                        @PathVariable Long id,
+                        @PathVariable("id") Long id,
                         @RequestParam(required = false) Long servingUnitId,
                         @RequestParam java.math.BigDecimal quantity) {
 

@@ -33,7 +33,7 @@ public class DailyLogController {
     @Operation(summary = "Get daily log", description = "Retrieves the daily log for a specific date. Creates a new one if it doesn't exist.")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> getDailyLog(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @Parameter(description = "Date (YYYY-MM-DD)") @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         log.info("REST request to get daily log for date: {}", date);
         DailyLogResponseDto dailyLog = dailyLogService.getOrCreateDailyLog(date, user.getId());
@@ -45,8 +45,8 @@ public class DailyLogController {
     @Operation(summary = "Get daily logs by date range", description = "Retrieves daily logs within a specified date range")
     public ResponseEntity<ApiResponse<java.util.List<DailyLogResponseDto>>> getDailyLogsByRange(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "Start Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @Parameter(description = "End Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @Parameter(description = "Start Date (YYYY-MM-DD)") @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "End Date (YYYY-MM-DD)") @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         log.info("REST request to get daily logs for range: {} to {}", startDate, endDate);
 
@@ -63,7 +63,7 @@ public class DailyLogController {
     @Operation(summary = "Get nutrient breakdown", description = "Retrieves nutrient breakdown by meal type for a specific date")
     public ResponseEntity<ApiResponse<java.util.List<com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto>>> getNutrientBreakdown(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "Date (YYYY-MM-DD)") @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @Parameter(description = "Date (YYYY-MM-DD)") @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         log.info("REST request to get nutrient breakdown for date: {}", date);
         java.util.List<com.nutritiontracker.modules.dailylog.dto.NutrientBreakdownDto> breakdown = dailyLogService
@@ -89,7 +89,7 @@ public class DailyLogController {
     @Operation(summary = "Update daily weight", description = "Updates the weight recording for a specific day")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> updateWeight(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "Date (YYYY-MM-DD)") @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Parameter(description = "Date (YYYY-MM-DD)") @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @Valid @RequestBody com.nutritiontracker.modules.dailylog.dto.DailyLogWeightRequestDto request) {
 
         log.info("REST request to update weight for date: {}", date);
@@ -127,8 +127,8 @@ public class DailyLogController {
     @Operation(summary = "Copy daily log", description = "Copies meal entries from one date to another")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyDailyLog(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "Source Date (YYYY-MM-DD)") @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @Parameter(description = "Source Date (YYYY-MM-DD)") @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam("targetDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
             @Parameter(description = "Replace existing entries") @RequestParam(defaultValue = "false") boolean replace) {
 
         log.info("REST request to copy daily log from {} to {}", date, targetDate);
@@ -141,9 +141,9 @@ public class DailyLogController {
     @Operation(summary = "Copy meal section", description = "Copies all entries of a specific meal type to another date/meal type")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyMealSection(
             @AuthenticationPrincipal User user,
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @PathVariable String mealType,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @RequestParam("targetDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
             @RequestParam String targetMealType,
             @RequestParam(defaultValue = "false") boolean replace) {
 
@@ -164,7 +164,7 @@ public class DailyLogController {
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyMealEntry(
             @AuthenticationPrincipal User user,
             @PathVariable Long id,
-            @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam("targetDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
             @Parameter(description = "Target Meal Type") @RequestParam(required = false) String targetMealType) {
 
         log.info("REST request to copy meal entry {} to date {} and mealType {}", id, targetDate, targetMealType);

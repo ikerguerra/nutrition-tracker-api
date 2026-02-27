@@ -24,17 +24,21 @@ public class NutritionalInfo {
     private Food food;
 
     // Macronutrients (per serving)
-    @Column(precision = 10, scale = 2)
-    private BigDecimal calories;
+    @Column(precision = 10, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal calories = BigDecimal.ZERO;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal protein;
+    @Column(precision = 10, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal protein = BigDecimal.ZERO;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal carbohydrates;
+    @Column(precision = 10, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal carbohydrates = BigDecimal.ZERO;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal fats;
+    @Column(precision = 10, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal fats = BigDecimal.ZERO;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal fiber;

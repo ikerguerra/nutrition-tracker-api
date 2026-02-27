@@ -41,7 +41,7 @@ public class ExternalFoodController {
     @GetMapping("/barcode/{barcode}")
     @Operation(summary = "Get by barcode from OpenFoodFacts", description = "Fetch a specific product details from OpenFoodFacts")
     public ResponseEntity<ApiResponse<ExternalFoodDTO>> getByBarcode(
-            @Parameter(description = "Product barcode") @PathVariable String barcode) {
+            @Parameter(description = "Product barcode") @PathVariable("barcode") String barcode) {
 
         log.info("REST request to get external food by barcode: {}", barcode);
         return openFoodFactsService.getProductByBarcode(barcode)
@@ -52,7 +52,7 @@ public class ExternalFoodController {
     @PostMapping("/{barcode}/import")
     @Operation(summary = "Import from OpenFoodFacts", description = "Import a product from OpenFoodFacts to local database")
     public ResponseEntity<ApiResponse<FoodResponseDto>> importProduct(
-            @Parameter(description = "Product barcode") @PathVariable String barcode) {
+            @Parameter(description = "Product barcode") @PathVariable("barcode") String barcode) {
 
         log.info("REST request to import external food: {}", barcode);
         try {

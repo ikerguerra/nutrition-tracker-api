@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -39,6 +40,7 @@ public class BarcodeService {
      * Search for food by barcode
      * First checks local database, then falls back to Open Food Facts API
      */
+    @Transactional(readOnly = true)
     public BarcodeSearchResponseDto searchByBarcode(String barcode) {
         log.info("Searching for food with barcode: {}", barcode);
 
@@ -81,7 +83,7 @@ public class BarcodeService {
 
         try {
             OpenFoodFactsResponse response = webClient.get()
-                    .uri("/product/{barcode}", barcode)
+                    .uri("/api/v0/product/{barcode}.json", barcode)
                     .retrieve()
                     .bodyToMono(OpenFoodFactsResponse.class)
                     .timeout(Duration.ofMillis(timeout))
@@ -106,21 +108,24 @@ public class BarcodeService {
      * Map Open Food Facts product to our DTO
      */
     private FoodResponseDto mapOpenFoodFactsToDto(OpenFoodFactsProduct product, String barcode) {
+        OpenFoodFactsNutriments nutriments = product.getNutriments() != null ? product.getNutriments()
+                : new OpenFoodFactsNutriments();
+
         FoodResponseDto.NutritionalInfoDto nutritionalInfo = FoodResponseDto.NutritionalInfoDto.builder()
-                .calories(convertToGrams(product.getNutriments().getEnergyKcal100g()))
-                .protein(convertToGrams(product.getNutriments().getProteins100g()))
-                .carbohydrates(convertToGrams(product.getNutriments().getCarbohydrates100g()))
-                .fats(convertToGrams(product.getNutriments().getFat100g()))
-                .fiber(convertToGrams(product.getNutriments().getFiber100g()))
-                .sugars(convertToGrams(product.getNutriments().getSugars100g()))
-                .saturatedFats(convertToGrams(product.getNutriments().getSaturatedFat100g()))
-                .sodium(convertToMg(product.getNutriments().getSodium100g()))
-                .calcium(convertToMg(product.getNutriments().getCalcium100g()))
-                .iron(convertToMg(product.getNutriments().getIron100g()))
-                .potassium(convertToMg(product.getNutriments().getPotassium100g()))
-                .vitaminA(convertToMg(product.getNutriments().getVitaminA100g()))
-                .vitaminC(convertToMg(product.getNutriments().getVitaminC100g()))
-                .vitaminD(convertToMg(product.getNutriments().getVitaminD100g()))
+                .calories(convertToGrams(nutriments.getEnergyKcal100g()))
+                .protein(convertToGrams(nutriments.getProteins100g()))
+                .carbohydrates(convertToGrams(nutriments.getCarbohydrates100g()))
+                .fats(convertToGrams(nutriments.getFat100g()))
+                .fiber(convertToGrams(nutriments.getFiber100g()))
+                .sugars(convertToGrams(nutriments.getSugars100g()))
+                .saturatedFats(convertToGrams(nutriments.getSaturatedFat100g()))
+                .sodium(convertToMg(nutriments.getSodium100g()))
+                .calcium(convertToMg(nutriments.getCalcium100g()))
+                .iron(convertToMg(nutriments.getIron100g()))
+                .potassium(convertToMg(nutriments.getPotassium100g()))
+                .vitaminA(convertToMg(nutriments.getVitaminA100g()))
+                .vitaminC(convertToMg(nutriments.getVitaminC100g()))
+                .vitaminD(convertToMg(nutriments.getVitaminD100g()))
                 .build();
 
         return FoodResponseDto.builder()
@@ -134,11 +139,11 @@ public class BarcodeService {
     }
 
     private BigDecimal convertToGrams(Double value) {
-        return value != null ? BigDecimal.valueOf(value) : null;
+        return value != null ? BigDecimal.valueOf(value) : BigDecimal.ZERO;
     }
 
     private BigDecimal convertToMg(Double value) {
-        return value != null ? BigDecimal.valueOf(value * 1000) : null; // Convert g to mg
+        return value != null ? BigDecimal.valueOf(value * 1000) : BigDecimal.ZERO; // Convert g to mg
     }
 
     // DTOs for Open Food Facts API response
@@ -154,9 +159,9 @@ public class BarcodeService {
     private static class OpenFoodFactsProduct {
         @JsonProperty("product_name")
         private String productName;
-        
+
         private String brands;
-        
+
         private OpenFoodFactsNutriments nutriments;
     }
 
@@ -165,43 +170,43 @@ public class BarcodeService {
     private static class OpenFoodFactsNutriments {
         @JsonProperty("energy-kcal_100g")
         private Double energyKcal100g;
-        
+
         @JsonProperty("proteins_100g")
         private Double proteins100g;
-        
+
         @JsonProperty("carbohydrates_100g")
         private Double carbohydrates100g;
-        
+
         @JsonProperty("fat_100g")
         private Double fat100g;
-        
+
         @JsonProperty("fiber_100g")
         private Double fiber100g;
-        
+
         @JsonProperty("sugars_100g")
         private Double sugars100g;
-        
+
         @JsonProperty("saturated-fat_100g")
         private Double saturatedFat100g;
-        
+
         @JsonProperty("sodium_100g")
         private Double sodium100g;
-        
+
         @JsonProperty("calcium_100g")
         private Double calcium100g;
-        
+
         @JsonProperty("iron_100g")
         private Double iron100g;
-        
+
         @JsonProperty("potassium_100g")
         private Double potassium100g;
-        
+
         @JsonProperty("vitamin-a_100g")
         private Double vitaminA100g;
-        
+
         @JsonProperty("vitamin-c_100g")
         private Double vitaminC100g;
-        
+
         @JsonProperty("vitamin-d_100g")
         private Double vitaminD100g;
     }

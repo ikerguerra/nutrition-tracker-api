@@ -38,8 +38,8 @@ public class StatsController {
     @Operation(summary = "Get weight history", description = "Get weight data points with moving average for a date range")
     public ResponseEntity<ApiResponse<List<WeightDataPointDto>>> getWeightHistory(
             @AuthenticationPrincipal User user,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         log.info("REST request to get weight history from {} to {} for userId: {}", startDate, endDate, user.getId());
         List<WeightDataPointDto> data = statsService.getWeightHistory(startDate, endDate, user.getId());
@@ -50,8 +50,8 @@ public class StatsController {
     @Operation(summary = "Get macro trends", description = "Get macro nutrient trends over time with goal adherence")
     public ResponseEntity<ApiResponse<List<MacroTrendDataPointDto>>> getMacroTrends(
             @AuthenticationPrincipal User user,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         log.info("REST request to get macro trends from {} to {} for userId: {}", startDate, endDate, user.getId());
         List<MacroTrendDataPointDto> data = statsService.getMacroTrends(startDate, endDate, user.getId());
@@ -62,7 +62,7 @@ public class StatsController {
     @Operation(summary = "Get weekly summary", description = "Get comparison between current week and previous week")
     public ResponseEntity<ApiResponse<WeeklySummaryDto>> getWeeklySummary(
             @AuthenticationPrincipal User user,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
 
         log.info("REST request to get weekly summary starting from {} for userId: {}", startDate, user.getId());
         WeeklySummaryDto data = statsService.getWeeklySummary(startDate, user.getId());
@@ -73,8 +73,8 @@ public class StatsController {
     @Operation(summary = "Get goal achievement stats", description = "Get goal achievement statistics including streaks")
     public ResponseEntity<ApiResponse<GoalAchievementDto>> getGoalAchievement(
             @AuthenticationPrincipal User user,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         log.info("REST request to get goal achievement from {} to {} for userId: {}", startDate, endDate, user.getId());
         GoalAchievementDto data = statsService.getGoalAchievement(startDate, endDate, user.getId());

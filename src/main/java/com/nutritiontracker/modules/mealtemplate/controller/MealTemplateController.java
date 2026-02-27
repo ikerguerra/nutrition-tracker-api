@@ -98,7 +98,7 @@ public class MealTemplateController {
     public ResponseEntity<ApiResponse<Void>> applyTemplate(
             @AuthenticationPrincipal User user,
             @PathVariable Long id,
-            @Parameter(description = "Date (YYYY-MM-DD)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Parameter(description = "Date (YYYY-MM-DD)") @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @Parameter(description = "Meal type override") @RequestParam(required = false) MealType mealType) {
 
         mealTemplateService.applyTemplate(id, date, mealType, user.getId());

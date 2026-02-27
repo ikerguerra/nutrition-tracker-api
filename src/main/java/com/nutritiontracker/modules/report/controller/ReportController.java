@@ -23,8 +23,8 @@ public class ReportController {
     @GetMapping(value = "/csv", produces = "text/csv")
     public ResponseEntity<byte[]> getCsvReport(
             @AuthenticationPrincipal User user,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         byte[] csvBytes = reportService.generateCsvReport(user.getId(), startDate, endDate);
 
@@ -39,8 +39,8 @@ public class ReportController {
     @GetMapping(value = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> getPdfReport(
             @AuthenticationPrincipal User user,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         byte[] pdfBytes = reportService.generatePdfReport(user.getId(), startDate, endDate);
 

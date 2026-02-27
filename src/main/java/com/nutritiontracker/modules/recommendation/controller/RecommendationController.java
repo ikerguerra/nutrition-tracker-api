@@ -21,7 +21,7 @@ public class RecommendationController {
     @GetMapping("/daily")
     public ResponseEntity<DietPlanResponseDto> getDailyPlan(
             @AuthenticationPrincipal User user,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         LocalDate targetDate = date != null ? date : LocalDate.now();
         return dietGenerationService.getLatestPlan(user.getId(), targetDate)
@@ -32,7 +32,7 @@ public class RecommendationController {
     @PostMapping("/daily")
     public ResponseEntity<DietPlanResponseDto> generateDailyPlan(
             @AuthenticationPrincipal User user,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(defaultValue = "false") boolean forceNew) {
 
         LocalDate targetDate = date != null ? date : LocalDate.now();

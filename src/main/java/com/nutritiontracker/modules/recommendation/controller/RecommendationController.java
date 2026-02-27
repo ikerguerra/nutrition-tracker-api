@@ -43,7 +43,7 @@ public class RecommendationController {
     @PostMapping("/{planId}/accept")
     public ResponseEntity<Void> acceptPlan(
             @AuthenticationPrincipal User user,
-            @PathVariable Long planId) {
+            @PathVariable("planId") Long planId) {
 
         dietGenerationService.acceptPlan(planId);
         return ResponseEntity.ok().build();
@@ -52,8 +52,8 @@ public class RecommendationController {
     @PostMapping("/{planId}/accept-meal")
     public ResponseEntity<Void> acceptMeal(
             @AuthenticationPrincipal User user,
-            @PathVariable Long planId,
-            @RequestParam com.nutritiontracker.modules.dailylog.enums.MealType mealType) {
+            @PathVariable("planId") Long planId,
+            @RequestParam("mealType") com.nutritiontracker.modules.dailylog.enums.MealType mealType) {
 
         dietGenerationService.acceptMeal(planId, mealType);
         return ResponseEntity.ok().build();

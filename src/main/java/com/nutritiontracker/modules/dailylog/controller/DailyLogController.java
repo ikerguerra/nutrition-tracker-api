@@ -102,7 +102,7 @@ public class DailyLogController {
     @Operation(summary = "Update meal entry", description = "Updates an existing meal entry")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> updateEntry(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "ID of the entry to update") @PathVariable Long id,
+            @Parameter(description = "ID of the entry to update") @PathVariable("id") Long id,
             @Valid @RequestBody MealEntryRequestDto request) {
 
         log.info("REST request to update meal entry id: {}", id);
@@ -115,7 +115,7 @@ public class DailyLogController {
     @Operation(summary = "Delete meal entry", description = "Removes a meal entry from the log")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> deleteEntry(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "ID of the entry to delete") @PathVariable Long id) {
+            @Parameter(description = "ID of the entry to delete") @PathVariable("id") Long id) {
 
         log.info("REST request to delete meal entry id: {}", id);
         DailyLogResponseDto updatedLog = dailyLogService.deleteEntry(id, user.getId());
@@ -129,7 +129,7 @@ public class DailyLogController {
             @AuthenticationPrincipal User user,
             @Parameter(description = "Source Date (YYYY-MM-DD)") @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam("targetDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
-            @Parameter(description = "Replace existing entries") @RequestParam(defaultValue = "false") boolean replace) {
+            @Parameter(description = "Replace existing entries") @RequestParam(value = "replace", defaultValue = "false") boolean replace) {
 
         log.info("REST request to copy daily log from {} to {}", date, targetDate);
         DailyLogResponseDto copiedLog = dailyLogService.copyDailyLog(date, targetDate, replace, user.getId());
@@ -142,10 +142,10 @@ public class DailyLogController {
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyMealSection(
             @AuthenticationPrincipal User user,
             @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @PathVariable String mealType,
+            @PathVariable("mealType") String mealType,
             @RequestParam("targetDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
-            @RequestParam String targetMealType,
-            @RequestParam(defaultValue = "false") boolean replace) {
+            @RequestParam("targetMealType") String targetMealType,
+            @RequestParam(value = "replace", defaultValue = "false") boolean replace) {
 
         log.info("REST request to copy meal section {} from {} to {}/{}", mealType, date, targetDate, targetMealType);
         DailyLogResponseDto copiedLog = dailyLogService.copyMealSection(
@@ -163,9 +163,9 @@ public class DailyLogController {
     @Operation(summary = "Copy meal entry", description = "Copies a single meal entry to another date/meal type")
     public ResponseEntity<ApiResponse<DailyLogResponseDto>> copyMealEntry(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Parameter(description = "Target Date (YYYY-MM-DD)") @RequestParam("targetDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
-            @Parameter(description = "Target Meal Type") @RequestParam(required = false) String targetMealType) {
+            @Parameter(description = "Target Meal Type") @RequestParam(value = "targetMealType", required = false) String targetMealType) {
 
         log.info("REST request to copy meal entry {} to date {} and mealType {}", id, targetDate, targetMealType);
         DailyLogResponseDto updatedLog = dailyLogService.copyMealEntry(id, targetDate, targetMealType, user.getId());

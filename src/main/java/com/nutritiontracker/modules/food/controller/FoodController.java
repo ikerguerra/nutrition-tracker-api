@@ -243,7 +243,7 @@ public class FoodController {
         public ResponseEntity<ApiResponse<FoodResponseDto.NutritionalInfoDto>> calculateNutrition(
                         @PathVariable("id") Long id,
                         @RequestParam(required = false) Long servingUnitId,
-                        @RequestParam java.math.BigDecimal quantity) {
+                        @RequestParam("quantity") java.math.BigDecimal quantity) {
 
                 return ResponseEntity.ok(ApiResponse.success(
                                 foodService.calculateNutrition(id, servingUnitId, quantity)));

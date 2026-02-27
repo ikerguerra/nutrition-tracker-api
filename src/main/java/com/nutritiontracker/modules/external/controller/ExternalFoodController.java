@@ -29,7 +29,7 @@ public class ExternalFoodController {
     @GetMapping("/search")
     @Operation(summary = "Search in OpenFoodFacts", description = "Search for products in the OpenFoodFacts database")
     public ResponseEntity<ApiResponse<List<ExternalFoodDTO>>> search(
-            @Parameter(description = "Search query") @RequestParam String query,
+            @Parameter(description = "Search query") @RequestParam("query") String query,
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
 
@@ -67,7 +67,7 @@ public class ExternalFoodController {
     @PostMapping("/import-batch")
     @Operation(summary = "Import in batch from OpenFoodFacts", description = "Import products from OpenFoodFacts in batch based on a search query")
     public ResponseEntity<ApiResponse<String>> importBatch(
-            @Parameter(description = "Search query") @RequestParam String query,
+            @Parameter(description = "Search query") @RequestParam("query") String query,
             @Parameter(description = "Max pages to process") @RequestParam(defaultValue = "1") int maxPages) {
 
         log.info("REST request to import batch for query: {} (maxPages: {})", query, maxPages);

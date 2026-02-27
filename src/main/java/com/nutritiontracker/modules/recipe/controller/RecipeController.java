@@ -46,7 +46,7 @@ public class RecipeController {
     @GetMapping("/{id}")
     @Operation(summary = "Get recipe by ID", description = "Retrieves a specific recipe with full details")
     public ResponseEntity<ApiResponse<RecipeResponseDto>> getRecipe(
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
 
         Recipe recipe = recipeService.getRecipeById(id);
         return ResponseEntity.ok(ApiResponse.success(recipeMapper.toDto(recipe)));
@@ -69,7 +69,7 @@ public class RecipeController {
     @Operation(summary = "Update recipe", description = "Updates an existing recipe")
     public ResponseEntity<ApiResponse<RecipeResponseDto>> updateRecipe(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody RecipeRequestDto request) {
 
         Recipe recipe = recipeMapper.toEntity(request, user.getId());
@@ -81,7 +81,7 @@ public class RecipeController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete recipe", description = "Removes a recipe")
     public ResponseEntity<ApiResponse<Void>> deleteRecipe(
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
 
         recipeService.deleteRecipe(id);
         return ResponseEntity.ok(ApiResponse.success("Recipe deleted successfully", null));

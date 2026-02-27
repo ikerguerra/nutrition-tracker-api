@@ -50,7 +50,7 @@ public class MealTemplateController {
     @GetMapping("/{id}")
     @Operation(summary = "Get template by ID", description = "Retrieves a specific meal template")
     public ResponseEntity<ApiResponse<MealTemplateResponseDto>> getTemplate(
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
 
         MealTemplate template = mealTemplateService.getTemplateById(id);
         return ResponseEntity.ok(ApiResponse.success(mealTemplateMapper.toDto(template)));
@@ -73,7 +73,7 @@ public class MealTemplateController {
     @Operation(summary = "Update template", description = "Updates an existing meal template")
     public ResponseEntity<ApiResponse<MealTemplateResponseDto>> updateTemplate(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody MealTemplateRequestDto request) {
 
         MealTemplate template = mealTemplateMapper.toEntity(request, user.getId());
@@ -87,7 +87,7 @@ public class MealTemplateController {
     @Operation(summary = "Delete template", description = "Removes a meal template")
     public ResponseEntity<ApiResponse<Void>> deleteTemplate(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
 
         mealTemplateService.deleteTemplate(id, user.getId());
         return ResponseEntity.ok(ApiResponse.success("Template deleted successfully", null));
@@ -97,7 +97,7 @@ public class MealTemplateController {
     @Operation(summary = "Apply template", description = "Adds all foods from a template to the daily log of a specific date")
     public ResponseEntity<ApiResponse<Void>> applyTemplate(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Parameter(description = "Date (YYYY-MM-DD)") @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @Parameter(description = "Meal type override") @RequestParam(required = false) MealType mealType) {
 

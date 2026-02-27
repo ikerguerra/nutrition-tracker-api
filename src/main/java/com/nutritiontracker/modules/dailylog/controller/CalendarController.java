@@ -31,8 +31,8 @@ public class CalendarController {
     @Operation(summary = "Get monthly summary", description = "Retrieves daily summaries for a specific month")
     public ResponseEntity<ApiResponse<List<CalendarDayDto>>> getMonthlySummary(
             @AuthenticationPrincipal User user,
-            @Parameter(description = "Year (e.g. 2023)") @RequestParam int year,
-            @Parameter(description = "Month (1-12)") @RequestParam int month) {
+            @Parameter(description = "Year (e.g. 2023)") @RequestParam("year") int year,
+            @Parameter(description = "Month (1-12)") @RequestParam("month") int month) {
 
         log.info("REST request to get monthly summary for year: {}, month: {}", year, month);
         List<CalendarDayDto> summary = calendarService.getMonthlySummary(user.getId(), year, month);

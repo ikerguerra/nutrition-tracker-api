@@ -48,7 +48,7 @@ public class MacroPresetController {
     @PutMapping("/{id}")
     public ResponseEntity<MacroPresetDTO> updatePreset(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody CreateMacroPresetRequest request) {
         MacroPreset preset = macroPresetService.updatePreset(
                 id,
@@ -63,7 +63,7 @@ public class MacroPresetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePreset(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         macroPresetService.deletePreset(id, user.getId());
         return ResponseEntity.noContent().build();
     }
@@ -71,7 +71,7 @@ public class MacroPresetController {
     @PostMapping("/{id}/set-default")
     public ResponseEntity<MacroPresetDTO> setDefaultPreset(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         MacroPreset preset = macroPresetService.setDefaultPreset(id, user.getId());
         return ResponseEntity.ok(toDTO(preset));
     }
@@ -79,7 +79,7 @@ public class MacroPresetController {
     @PostMapping("/{id}/apply")
     public ResponseEntity<UserProfileDTO> applyPresetToProfile(
             @AuthenticationPrincipal User user,
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         UserProfile profile = macroPresetService.applyPresetToProfile(id, user.getId());
         return ResponseEntity.ok(toUserProfileDTO(profile));
     }

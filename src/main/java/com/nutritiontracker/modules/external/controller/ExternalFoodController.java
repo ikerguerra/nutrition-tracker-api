@@ -35,7 +35,9 @@ public class ExternalFoodController {
 
         log.info("REST request to search external foods: {}", query);
         List<ExternalFoodDTO> results = openFoodFactsService.searchProducts(query, page, size);
-        return ResponseEntity.ok(ApiResponse.success(results));
+        return ResponseEntity.ok()
+                .cacheControl(org.springframework.http.CacheControl.maxAge(java.time.Duration.ofHours(1)))
+                .body(ApiResponse.success(results));
     }
 
     @GetMapping("/barcode/{barcode}")

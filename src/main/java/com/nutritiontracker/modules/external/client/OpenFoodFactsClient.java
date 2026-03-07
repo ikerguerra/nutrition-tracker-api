@@ -5,7 +5,9 @@ import com.nutritiontracker.modules.external.dto.OpenFoodFactsProduct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 
@@ -13,18 +15,20 @@ import java.time.Duration;
 @Slf4j
 public class OpenFoodFactsClient {
 
-        private final WebClient webClient;
-        private final Duration timeout;
+        private final RestTemplate restTemplate;
+        private final String baseUrl;
 
         public OpenFoodFactsClient(
-                        WebClient.Builder webClientBuilder,
+                        RestTemplateBuilder restTemplateBuilder,
                         @Value("${external.openfoodfacts.base-url}") String baseUrl,
                         @Value("${external.openfoodfacts.timeout:5000}") long timeoutMillis) {
 
-                this.timeout = Duration.ofMillis(timeoutMillis);
-                this.webClient = webClientBuilder
-                                .baseUrl(baseUrl)
-                                .defaultHeader("User-Agent", "NutritionTracker/1.0")
+                this.baseUrl = baseUrl;
+                this.restTemplate = restTemplateBuilder
+                                .setConnectTimeout(Duration.ofMillis(timeoutMillis))
+                                .setReadTimeout(Duration.ofMillis(timeoutMillis))
+                                .defaultHeader("User-Agent", "NutritionTrackerApp/1.0 (ikerguerra@hotmail.es)")
+                                .defaultHeader("Accept", "application/json")
                                 .build();
         }
 
@@ -32,27 +36,20 @@ public class OpenFoodFactsClient {
                 log.debug("Searching OpenFoodFacts for: {}, page: {}, size: {}", query, page, pageSize);
 
                 try {
-                        return webClient.get()
-                                        .uri(uriBuilder -> uriBuilder
-                                                        .path("/cgi/search.pl")
-                                                        .queryParam("search_terms", query)
-                                                        .queryParam("search_simple", "1")
-                                                        .queryParam("action", "process")
-                                                        .queryParam("fields",
-                                                                        "code,product_name,brands,image_url,nutriments")
-                                                        .queryParam("json", "1")
-                                                        .queryParam("page", page)
-                                                        .queryParam("page_size", pageSize)
-                                                        .build())
-                                        .retrieve()
-                                        .bodyToMono(OpenFoodFactsSearchResponse.class)
-                                        .timeout(timeout)
-                                        .doOnError(error -> log.warn(
-                                                        "Error calling OpenFoodFacts API for query '{}': {}",
-                                                        query, error.getMessage()))
-                                        .onErrorReturn(new OpenFoodFactsSearchResponse()) // Return empty response on
-                                                                                          // error
-                                        .block(); // Blocking for now as our service layer is synchronous
+                        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                                        .path("/cgi/search.pl")
+                                        .queryParam("search_terms", query)
+                                        .queryParam("search_simple", "1")
+                                        .queryParam("action", "process")
+                                        .queryParam("fields", "code,product_name,brands,image_url,nutriments")
+                                        .queryParam("json", "1")
+                                        .queryParam("page", page)
+                                        .queryParam("page_size", pageSize)
+                                        .toUriString();
+
+                        OpenFoodFactsSearchResponse response = restTemplate.getForObject(url,
+                                        OpenFoodFactsSearchResponse.class);
+                        return response != null ? response : new OpenFoodFactsSearchResponse();
                 } catch (Exception e) {
                         log.error("Failed to search OpenFoodFacts for query '{}': {}", query, e.getMessage());
                         return new OpenFoodFactsSearchResponse();
@@ -62,27 +59,14 @@ public class OpenFoodFactsClient {
         public OpenFoodFactsProduct getProductByBarcode(String barcode) {
                 log.debug("Fetching product from OpenFoodFacts by barcode: {}", barcode);
 
-                // The API structure for single product is slightly different, usually
-                // /product/{barcode}.json
-                // But we can map the response to a wrapper or just the product.
-                // Let's assume we get a wrapper and extract the product.
-
                 try {
-                        ProductResponseWrapper wrapper = webClient.get()
-                                        .uri(uriBuilder -> uriBuilder
-                                                        .path("/api/v0/product/{barcode}.json")
-                                                        .queryParam("fields",
-                                                                        "code,product_name,brands,image_url,nutriments")
-                                                        .build(barcode))
-                                        .retrieve()
-                                        .bodyToMono(ProductResponseWrapper.class)
-                                        .timeout(timeout)
-                                        .doOnError(error -> log.warn(
-                                                        "Error calling OpenFoodFacts API for barcode '{}': {}",
-                                                        barcode, error.getMessage()))
-                                        .block();
+                        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                                        .path("/api/v0/product/{barcode}.json")
+                                        .queryParam("fields", "code,product_name,brands,image_url,nutriments")
+                                        .buildAndExpand(barcode)
+                                        .toUriString();
 
-                        // Extract product from wrapper, return null if wrapper is null
+                        ProductResponseWrapper wrapper = restTemplate.getForObject(url, ProductResponseWrapper.class);
                         return wrapper != null ? wrapper.getProduct() : null;
                 } catch (Exception e) {
                         log.error("Failed to fetch product from OpenFoodFacts for barcode '{}': {}", barcode,

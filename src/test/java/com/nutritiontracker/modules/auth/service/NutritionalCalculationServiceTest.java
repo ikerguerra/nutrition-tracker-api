@@ -199,4 +199,61 @@ class NutritionalCalculationServiceTest {
         assertThat(carbs).isCloseTo(150, org.assertj.core.data.Offset.offset(5.0)); // 30% of 2000 = 600 cal / 4 = 150g
         assertThat(fats).isCloseTo(67, org.assertj.core.data.Offset.offset(5.0)); // 30% of 2000 = 600 cal / 9 = 67g
     }
+
+    @Test
+    @DisplayName("Should throw exception when calculating BMR with missing weight")
+    void shouldThrowExceptionWhenWeightIsMissing() {
+        // Given
+        maleProfile.setWeight(null);
+
+        // When/Then
+        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.calculateBMR(maleProfile));
+        assertThat(exception.getMessage()).contains("Weight, height, and age are required");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when calculating BMR with missing height")
+    void shouldThrowExceptionWhenHeightIsMissing() {
+        // Given
+        maleProfile.setHeight(null);
+
+        // When/Then
+        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.calculateBMR(maleProfile));
+        assertThat(exception.getMessage()).contains("Weight, height, and age are required");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when calculating BMR with missing age")
+    void shouldThrowExceptionWhenAgeIsMissing() {
+        // Given
+        maleProfile.setDateOfBirth(null);
+
+        // When/Then
+        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.calculateBMR(maleProfile));
+        assertThat(exception.getMessage()).contains("Weight, height, and age are required");
+    }
+
+    @Test
+    @DisplayName("Should calculate 0 macros when custom percentages are 0")
+    void shouldCalculateZeroMacrosWhenPercentagesAreZero() {
+        // Given
+        maleProfile.setUseCustomMacros(true);
+        maleProfile.setCustomProteinPercentage(BigDecimal.ZERO);
+        maleProfile.setCustomCarbsPercentage(BigDecimal.ZERO);
+        maleProfile.setCustomFatsPercentage(BigDecimal.ZERO);
+
+        // When
+        double[] macros = service.calculateMacros(maleProfile, 2000);
+
+        // Then
+        assertThat(macros[0]).isEqualTo(0.0);
+        assertThat(macros[1]).isEqualTo(0.0);
+        assertThat(macros[2]).isEqualTo(0.0);
+    }
 }

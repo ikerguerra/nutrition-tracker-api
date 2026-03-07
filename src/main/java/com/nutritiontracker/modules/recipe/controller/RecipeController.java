@@ -61,8 +61,11 @@ public class RecipeController {
         Recipe recipe = recipeMapper.toEntity(request, user.getId());
         Recipe savedRecipe = recipeService.createRecipe(recipe);
 
+        // Re-fetch to load all associations for nutrition calculation in mapper
+        Recipe fullRecipe = recipeService.getRecipeById(savedRecipe.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Recipe created successfully", recipeMapper.toDto(savedRecipe)));
+                .body(ApiResponse.success("Recipe created successfully", recipeMapper.toDto(fullRecipe)));
     }
 
     @PutMapping("/{id}")
@@ -75,7 +78,10 @@ public class RecipeController {
         Recipe recipe = recipeMapper.toEntity(request, user.getId());
         Recipe updatedRecipe = recipeService.updateRecipe(id, recipe);
 
-        return ResponseEntity.ok(ApiResponse.success("Recipe updated successfully", recipeMapper.toDto(updatedRecipe)));
+        // Re-fetch to load all associations for nutrition calculation in mapper
+        Recipe fullRecipe = recipeService.getRecipeById(updatedRecipe.getId());
+
+        return ResponseEntity.ok(ApiResponse.success("Recipe updated successfully", recipeMapper.toDto(fullRecipe)));
     }
 
     @DeleteMapping("/{id}")

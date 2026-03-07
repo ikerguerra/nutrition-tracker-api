@@ -84,18 +84,40 @@ public class RecipeService {
         BigDecimal totalCarbs = BigDecimal.ZERO;
         BigDecimal totalFats = BigDecimal.ZERO;
 
+        if (recipe == null || recipe.getIngredients() == null || recipe.getIngredients().isEmpty()) {
+            return NutritionSummary.builder().calories(BigDecimal.ZERO).protein(BigDecimal.ZERO).carbs(BigDecimal.ZERO)
+                    .fats(BigDecimal.ZERO).build();
+        }
+
         for (RecipeIngredient ingredient : recipe.getIngredients()) {
+            if (ingredient.getFood() == null || ingredient.getFood().getServingSize() == null ||
+                    ingredient.getFood().getServingSize().compareTo(BigDecimal.ZERO) <= 0) {
+                log.warn("Food id {} has invalid serving size: {}",
+                        ingredient.getFood() != null ? ingredient.getFood().getId() : "null",
+                        ingredient.getFood() != null ? ingredient.getFood().getServingSize() : "null");
+                continue;
+            }
+
             BigDecimal servingSize = ingredient.getFood().getServingSize();
             BigDecimal ratio = ingredient.getQuantity().divide(servingSize, 4, RoundingMode.HALF_UP);
 
             var info = ingredient.getFood().getNutritionalInfo();
-            totalCals = totalCals.add(info.getCalories().multiply(ratio));
-            totalProt = totalProt.add(info.getProtein().multiply(ratio));
-            totalCarbs = totalCarbs.add(info.getCarbohydrates().multiply(ratio));
-            totalFats = totalFats.add(info.getFats().multiply(ratio));
+            if (info != null) {
+                if (info.getCalories() != null)
+                    totalCals = totalCals.add(info.getCalories().multiply(ratio));
+                if (info.getProtein() != null)
+                    totalProt = totalProt.add(info.getProtein().multiply(ratio));
+                if (info.getCarbohydrates() != null)
+                    totalCarbs = totalCarbs.add(info.getCarbohydrates().multiply(ratio));
+                if (info.getFats() != null)
+                    totalFats = totalFats.add(info.getFats().multiply(ratio));
+            }
         }
 
-        BigDecimal servings = BigDecimal.valueOf(recipe.getServings());
+        BigDecimal servings = BigDecimal.valueOf(recipe.getServings() != null ? recipe.getServings() : 1);
+        if (servings.compareTo(BigDecimal.ZERO) <= 0)
+            servings = BigDecimal.ONE;
+
         return NutritionSummary.builder()
                 .calories(totalCals.divide(servings, 2, RoundingMode.HALF_UP))
                 .protein(totalProt.divide(servings, 2, RoundingMode.HALF_UP))

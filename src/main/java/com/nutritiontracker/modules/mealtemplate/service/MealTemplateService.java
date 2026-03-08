@@ -9,8 +9,6 @@ import com.nutritiontracker.modules.mealtemplate.entity.MealTemplateItem;
 import com.nutritiontracker.modules.mealtemplate.repository.MealTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +24,6 @@ public class MealTemplateService {
     private final DailyLogService dailyLogService;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "mealTemplates", key = "#userId")
     public List<MealTemplate> getUserTemplates(Long userId) {
         return mealTemplateRepository.findByUserIdOrSystemTrue(userId);
     }
@@ -38,14 +35,12 @@ public class MealTemplateService {
     }
 
     @Transactional
-    @CacheEvict(value = "mealTemplates", allEntries = true)
     public MealTemplate createTemplate(MealTemplate template) {
         log.info("Creating new meal template: {}", template.getName());
         return mealTemplateRepository.save(template);
     }
 
     @Transactional
-    @CacheEvict(value = "mealTemplates", allEntries = true)
     public MealTemplate updateTemplate(Long id, MealTemplate updatedTemplate, Long userId) {
         MealTemplate existing = getTemplateById(id);
 
@@ -71,7 +66,6 @@ public class MealTemplateService {
     }
 
     @Transactional
-    @CacheEvict(value = "mealTemplates", allEntries = true)
     public void deleteTemplate(Long id, Long userId) {
         MealTemplate existing = getTemplateById(id);
 

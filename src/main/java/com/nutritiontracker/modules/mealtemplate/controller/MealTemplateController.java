@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/meal-templates")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Meal Template Management", description = "APIs for managing and applying meal templates")
 public class MealTemplateController {
 
@@ -65,8 +63,11 @@ public class MealTemplateController {
         MealTemplate template = mealTemplateMapper.toEntity(request, user.getId());
         MealTemplate savedTemplate = mealTemplateService.createTemplate(template);
 
+        // Re-fetch to load all associations for correct mapping
+        MealTemplate fullTemplate = mealTemplateService.getTemplateById(savedTemplate.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Template created successfully", mealTemplateMapper.toDto(savedTemplate)));
+                .body(ApiResponse.success("Template created successfully", mealTemplateMapper.toDto(fullTemplate)));
     }
 
     @PutMapping("/{id}")
@@ -79,8 +80,11 @@ public class MealTemplateController {
         MealTemplate template = mealTemplateMapper.toEntity(request, user.getId());
         MealTemplate updatedTemplate = mealTemplateService.updateTemplate(id, template, user.getId());
 
+        // Re-fetch to load all associations for correct mapping
+        MealTemplate fullTemplate = mealTemplateService.getTemplateById(updatedTemplate.getId());
+
         return ResponseEntity
-                .ok(ApiResponse.success("Template updated successfully", mealTemplateMapper.toDto(updatedTemplate)));
+                .ok(ApiResponse.success("Template updated successfully", mealTemplateMapper.toDto(fullTemplate)));
     }
 
     @DeleteMapping("/{id}")

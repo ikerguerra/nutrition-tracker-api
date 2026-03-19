@@ -148,16 +148,11 @@
             <version>7.20.0</version>
         </dependency>
 
-        <!-- Redis Caching -->
+        <!-- Google Cloud SQL Socket Factory -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
-        <!-- Elasticsearch -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+            <groupId>com.google.cloud.sql</groupId>
+            <artifactId>mysql-socket-factory-connector-j-8</artifactId>
+            <version>1.17.1</version>
         </dependency>
 
         <!-- Report Generation (PDF & CSV) -->

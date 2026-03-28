@@ -13,6 +13,9 @@ import com.nutritiontracker.modules.dailylog.repository.MealEntryRepository;
 import com.nutritiontracker.modules.food.entity.Food;
 import com.nutritiontracker.modules.food.entity.NutritionalInfo;
 import com.nutritiontracker.modules.food.repository.FoodRepository;
+import com.nutritiontracker.modules.recipe.entity.Recipe;
+import com.nutritiontracker.modules.recipe.repository.RecipeRepository;
+import com.nutritiontracker.modules.recipe.service.RecipeService;
 import com.nutritiontracker.modules.auth.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,8 @@ public class DailyLogService {
     private final DailyLogRepository dailyLogRepository;
     private final MealEntryRepository mealEntryRepository;
     private final FoodRepository foodRepository;
+    private final RecipeRepository recipeRepository;
+    private final RecipeService recipeService;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileService userProfileService;
 
@@ -56,7 +61,9 @@ public class DailyLogService {
         // Explicitly initialize nutritionalInfo for all entries to avoid lazy loading
         // issues
         for (MealEntry entry : dailyLog.getMealEntries()) {
-            entry.getFood().getNutritionalInfo().getCalories(); // Force initialization
+            if (entry.getFood() != null && entry.getFood().getNutritionalInfo() != null) {
+                entry.getFood().getNutritionalInfo().getCalories(); // Force initialization
+            }
         }
 
         return mapToDto(dailyLog, userId);
@@ -251,10 +258,20 @@ public class DailyLogService {
         log.info("Adding meal entry for date: {}", request.getDate());
 
         DailyLog dailyLog = getOrCreateDailyLogEntity(request.getDate(), userId);
-        Food food = foodRepository.findById(request.getFoodId())
-                .orElseThrow(() -> new ResourceNotFoundException("Food not found"));
+        
+        Food food = null;
+        Recipe recipe = null;
+        if (request.getFoodId() != null) {
+            food = foodRepository.findById(request.getFoodId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Food not found"));
+        } else if (request.getRecipeId() != null) {
+            recipe = recipeRepository.findById(request.getRecipeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Recipe not found"));
+        } else {
+            throw new IllegalArgumentException("Either foodId or recipeId must be provided");
+        }
 
-        MealEntry entry = createMealEntry(dailyLog, food, request);
+        MealEntry entry = createMealEntry(dailyLog, food, recipe, request);
         dailyLog.addMealEntry(entry);
 
         recalculateTotals(dailyLog);
@@ -293,15 +310,25 @@ public class DailyLogService {
             newLog.addMealEntry(entry);
         }
 
-        Food food = foodRepository.findById(request.getFoodId())
-                .orElseThrow(() -> new ResourceNotFoundException("Food not found"));
+        Food food = null;
+        Recipe recipe = null;
+        if (request.getFoodId() != null) {
+            food = foodRepository.findById(request.getFoodId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Food not found"));
+        } else if (request.getRecipeId() != null) {
+            recipe = recipeRepository.findById(request.getRecipeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Recipe not found"));
+        } else {
+            throw new IllegalArgumentException("Either foodId or recipeId must be provided");
+        }
 
         entry.setFood(food);
+        entry.setRecipe(recipe);
         entry.setMealType(request.getMealType());
         entry.setQuantity(request.getQuantity());
         entry.setUnit(request.getUnit());
 
-        calculateAndSetMacros(entry, food, request.getQuantity(), request.getServingUnitId());
+        calculateAndSetMacros(entry, food, recipe, request.getQuantity(), request.getServingUnitId());
 
         MealEntry savedEntry = mealEntryRepository.save(entry);
 
@@ -375,53 +402,60 @@ public class DailyLogService {
         return dailyLogRepository.save(dailyLog);
     }
 
-    private MealEntry createMealEntry(DailyLog dailyLog, Food food, MealEntryRequestDto request) {
+    private MealEntry createMealEntry(DailyLog dailyLog, Food food, Recipe recipe, MealEntryRequestDto request) {
         MealEntry entry = MealEntry.builder()
                 .dailyLog(dailyLog)
                 .food(food)
+                .recipe(recipe)
                 .mealType(request.getMealType())
                 .quantity(request.getQuantity())
                 .unit(request.getUnit())
                 .build();
 
-        calculateAndSetMacros(entry, food, request.getQuantity(), request.getServingUnitId());
+        calculateAndSetMacros(entry, food, recipe, request.getQuantity(), request.getServingUnitId());
         return entry;
     }
 
-    private void calculateAndSetMacros(MealEntry entry, Food food, BigDecimal quantity, Long servingUnitId) {
-        NutritionalInfo info = food.getNutritionalInfo();
-        BigDecimal baseAmount = BigDecimal.valueOf(100); // Standard base amount for calculation
-        BigDecimal amountInGrams = quantity;
+    private void calculateAndSetMacros(MealEntry entry, Food food, Recipe recipe, BigDecimal quantity, Long servingUnitId) {
+        if (food != null) {
+            NutritionalInfo info = food.getNutritionalInfo();
+            BigDecimal baseAmount = BigDecimal.valueOf(100); // Standard base amount for calculation
+            BigDecimal amountInGrams = quantity;
 
-        // If a specific serving unit is used, convert quantity to grams
-        if (servingUnitId != null && food.getServingUnits() != null) {
-            com.nutritiontracker.modules.food.entity.ServingUnit servingUnit = food.getServingUnits().stream()
-                    .filter(u -> u.getId().equals(servingUnitId))
-                    .findFirst()
-                    .orElse(null);
+            // If a specific serving unit is used, convert quantity to grams
+            if (servingUnitId != null && food.getServingUnits() != null) {
+                com.nutritiontracker.modules.food.entity.ServingUnit servingUnit = food.getServingUnits().stream()
+                        .filter(u -> u.getId().equals(servingUnitId))
+                        .findFirst()
+                        .orElse(null);
 
-            if (servingUnit != null) {
-                amountInGrams = quantity.multiply(servingUnit.getWeightGrams());
+                if (servingUnit != null) {
+                    amountInGrams = quantity.multiply(servingUnit.getWeightGrams());
+                }
+            } else if (food.getServingSize() != null && !food.getServingSize().equals(BigDecimal.ZERO)) {
+                amountInGrams = quantity;
             }
-        } else if (food.getServingSize() != null && !food.getServingSize().equals(BigDecimal.ZERO)) {
-            // Fallback: legacy logic assumed quantity was in grams relative to servingSize?
-            // Actually, if unit is 'g' or 'ml', quantity IS grams/ml.
-            // If the user inputs 100g, amountInGrams = 100.
-            // The nutrition info is per 100g (usually).
-            // Let's assume standard behavior: Input is grams unless ServingUnit is
-            // specified.
-            amountInGrams = quantity;
-        }
 
-        // Calculate ratio based on 100g base
-        // Formula: (amountInGrams / 100) * nutrientValue
-        if (info != null) {
-            BigDecimal ratio = amountInGrams.divide(baseAmount, 4, RoundingMode.HALF_UP);
+            // Calculate ratio based on 100g base
+            if (info != null) {
+                BigDecimal ratio = amountInGrams.divide(baseAmount, 4, RoundingMode.HALF_UP);
 
-            entry.setCalories(info.getCalories().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
-            entry.setProtein(info.getProtein().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
-            entry.setCarbohydrates(info.getCarbohydrates().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
-            entry.setFats(info.getFats().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+                entry.setCalories(info.getCalories().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+                entry.setProtein(info.getProtein().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+                entry.setCarbohydrates(info.getCarbohydrates().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+                entry.setFats(info.getFats().multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+            } else {
+                entry.setCalories(BigDecimal.ZERO);
+                entry.setProtein(BigDecimal.ZERO);
+                entry.setCarbohydrates(BigDecimal.ZERO);
+                entry.setFats(BigDecimal.ZERO);
+            }
+        } else if (recipe != null) {
+            var nutritionPerServing = recipeService.calculateNutritionPerServing(recipe);
+            entry.setCalories(nutritionPerServing.getCalories().multiply(quantity).setScale(2, RoundingMode.HALF_UP));
+            entry.setProtein(nutritionPerServing.getProtein().multiply(quantity).setScale(2, RoundingMode.HALF_UP));
+            entry.setCarbohydrates(nutritionPerServing.getCarbs().multiply(quantity).setScale(2, RoundingMode.HALF_UP));
+            entry.setFats(nutritionPerServing.getFats().multiply(quantity).setScale(2, RoundingMode.HALF_UP));
         } else {
             entry.setCalories(BigDecimal.ZERO);
             entry.setProtein(BigDecimal.ZERO);
@@ -519,9 +553,11 @@ public class DailyLogService {
     private DailyLogResponseDto.MealEntryDto mapEntryToDto(MealEntry entry) {
         return DailyLogResponseDto.MealEntryDto.builder()
                 .id(entry.getId())
-                .foodId(entry.getFood().getId())
-                .foodName(entry.getFood().getName())
-                .brand(entry.getFood().getBrand())
+                .foodId(entry.getFood() != null ? entry.getFood().getId() : null)
+                .foodName(entry.getFood() != null ? entry.getFood().getName() : null)
+                .brand(entry.getFood() != null ? entry.getFood().getBrand() : null)
+                .recipeId(entry.getRecipe() != null ? entry.getRecipe().getId() : null)
+                .recipeName(entry.getRecipe() != null ? entry.getRecipe().getName() : null)
                 .quantity(entry.getQuantity())
                 .unit(entry.getUnit())
                 .calories(entry.getCalories())
@@ -557,12 +593,13 @@ public class DailyLogService {
             MealEntryRequestDto request = MealEntryRequestDto.builder()
                     .date(targetDate)
                     .mealType(sourceEntry.getMealType())
-                    .foodId(sourceEntry.getFood().getId())
+                    .foodId(sourceEntry.getFood() != null ? sourceEntry.getFood().getId() : null)
+                    .recipeId(sourceEntry.getRecipe() != null ? sourceEntry.getRecipe().getId() : null)
                     .quantity(sourceEntry.getQuantity())
                     .unit(sourceEntry.getUnit())
                     .build();
 
-            MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), request);
+            MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), sourceEntry.getRecipe(), request);
             targetLog.addMealEntry(newEntry);
         }
 
@@ -595,12 +632,13 @@ public class DailyLogService {
         MealEntryRequestDto request = MealEntryRequestDto.builder()
                 .date(targetDate)
                 .mealType(newMealType)
-                .foodId(sourceEntry.getFood().getId())
+                .foodId(sourceEntry.getFood() != null ? sourceEntry.getFood().getId() : null)
+                .recipeId(sourceEntry.getRecipe() != null ? sourceEntry.getRecipe().getId() : null)
                 .quantity(sourceEntry.getQuantity())
                 .unit(sourceEntry.getUnit())
                 .build();
 
-        MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), request);
+        MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), sourceEntry.getRecipe(), request);
         targetLog.addMealEntry(newEntry);
 
         recalculateTotals(targetLog);
@@ -641,12 +679,13 @@ public class DailyLogService {
             MealEntryRequestDto request = MealEntryRequestDto.builder()
                     .date(targetDate)
                     .mealType(targetMealType)
-                    .foodId(sourceEntry.getFood().getId())
+                    .foodId(sourceEntry.getFood() != null ? sourceEntry.getFood().getId() : null)
+                    .recipeId(sourceEntry.getRecipe() != null ? sourceEntry.getRecipe().getId() : null)
                     .quantity(sourceEntry.getQuantity())
                     .unit(sourceEntry.getUnit())
                     .build();
 
-            MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), request);
+            MealEntry newEntry = createMealEntry(targetLog, sourceEntry.getFood(), sourceEntry.getRecipe(), request);
             targetLog.addMealEntry(newEntry);
         }
 

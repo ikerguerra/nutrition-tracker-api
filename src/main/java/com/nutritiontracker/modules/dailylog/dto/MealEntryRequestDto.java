@@ -21,8 +21,9 @@ public class MealEntryRequestDto {
     @NotNull(message = "Meal type is required")
     private MealType mealType;
 
-    @NotNull(message = "Food ID is required")
     private Long foodId;
+    
+    private Long recipeId;
 
     @NotNull(message = "Quantity is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Quantity must be greater than 0")

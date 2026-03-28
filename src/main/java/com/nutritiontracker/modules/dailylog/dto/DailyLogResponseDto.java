@@ -55,6 +55,8 @@ public class DailyLogResponseDto {
         private Long id;
         private Long foodId;
         private String foodName;
+        private Long recipeId;
+        private String recipeName;
         private String brand;
         private BigDecimal quantity;
         private String unit;

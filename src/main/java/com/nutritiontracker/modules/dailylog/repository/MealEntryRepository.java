@@ -15,20 +15,20 @@ public interface MealEntryRepository extends JpaRepository<MealEntry, Long> {
     /**
      * Find meal entry with food and dailyLog eagerly loaded
      */
-    @Query("SELECT me FROM MealEntry me JOIN FETCH me.food f JOIN FETCH f.nutritionalInfo JOIN FETCH me.dailyLog WHERE me.id = :id")
+    @Query("SELECT me FROM MealEntry me LEFT JOIN FETCH me.food f LEFT JOIN FETCH f.nutritionalInfo LEFT JOIN FETCH me.recipe JOIN FETCH me.dailyLog WHERE me.id = :id")
     Optional<MealEntry> findByIdWithRelations(@Param("id") Long id);
 
-    @Query("SELECT me.food.id FROM MealEntry me WHERE me.dailyLog.userId = :userId GROUP BY me.food.id ORDER BY COUNT(me) DESC")
+    @Query("SELECT me.food.id FROM MealEntry me WHERE me.food IS NOT NULL AND me.dailyLog.userId = :userId GROUP BY me.food.id ORDER BY COUNT(me) DESC")
     List<Long> findTopFrequentFoodIds(@Param("userId") Long userId, org.springframework.data.domain.Pageable pageable);
 
-    @Query("SELECT me.food.id FROM MealEntry me WHERE me.dailyLog.userId = :userId AND me.mealType = :mealType AND me.dailyLog.date >= :startDate GROUP BY me.food.id ORDER BY COUNT(me) DESC")
+    @Query("SELECT me.food.id FROM MealEntry me WHERE me.food IS NOT NULL AND me.dailyLog.userId = :userId AND me.mealType = :mealType AND me.dailyLog.date >= :startDate GROUP BY me.food.id ORDER BY COUNT(me) DESC")
     List<Long> findTopFrequentFoodIdsByMealType(
             @Param("userId") Long userId,
             @Param("mealType") com.nutritiontracker.modules.dailylog.enums.MealType mealType,
             @Param("startDate") java.time.LocalDate startDate,
             org.springframework.data.domain.Pageable pageable);
 
-    @Query("SELECT DISTINCT me.food.id FROM MealEntry me WHERE me.dailyLog.userId = :userId AND me.dailyLog.date >= :startDate ORDER BY me.food.id DESC")
+    @Query("SELECT DISTINCT me.food.id FROM MealEntry me WHERE me.food IS NOT NULL AND me.dailyLog.userId = :userId AND me.dailyLog.date >= :startDate ORDER BY me.food.id DESC")
     // Note: Ordering by date in the DISTINCT query is complex in JPQL/SQL standard
     // without subqueries or specific dialect features if not selecting the date.
     // For simplicity, we fetch foodIds. If we want strict "most recent order", we

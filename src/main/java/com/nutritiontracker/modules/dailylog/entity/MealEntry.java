@@ -2,6 +2,7 @@ package com.nutritiontracker.modules.dailylog.entity;
 
 import com.nutritiontracker.modules.dailylog.enums.MealType;
 import com.nutritiontracker.modules.food.entity.Food;
+import com.nutritiontracker.modules.recipe.entity.Recipe;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -31,8 +32,12 @@ public class MealEntry {
     private DailyLog dailyLog;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "food_id", nullable = false)
+    @JoinColumn(name = "food_id", nullable = true)
     private Food food;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipe_id", nullable = true)
+    private Recipe recipe;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "meal_type", nullable = false)
